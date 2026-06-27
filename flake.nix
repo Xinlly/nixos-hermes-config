@@ -10,6 +10,8 @@
     # 飞书流式卡片侧车，来自本地 git 仓库（非 flake，需 flake=false）
     hermes-feishu-card.url = "path:/var/lib/hermes/workspace/projects/our/hermes-feishu-streaming-card";
     hermes-feishu-card.flake = false;
+    # llm-agents.nix — AI 编码代理软件包（含 agent-browser CLI）
+    llm-agents.url = "github:numtide/llm-agents.nix";
   };
 
   outputs = { self, nixpkgs, nixos-wsl, hermes-agent, ... }@inputs: {

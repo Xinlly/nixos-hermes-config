@@ -101,7 +101,8 @@ let
     export PYTHONPATH="${shim}"
     cd /var/lib/hermes/workspace || true
     if [ "$(whoami)" != "hermes" ]; then
-      exec sudo -u hermes env PYTHONPATH="$PYTHONPATH" "$0" "$@"
+      export PATH="/etc/profiles/per-user/hermes/bin:$PATH"
+      exec sudo -u hermes env PYTHONPATH="$PYTHONPATH" PATH="$PATH" "$0" "$@"
     fi
     exec hermes "$@"
   '';
@@ -123,8 +124,11 @@ in let
   # 包含: feishu-card 包 + 补丁版 gateway + sitecustomize.py shim
   pythonPath = "${config.services.hermesFeishuCard.package}/lib/python3.12/site-packages:${config.services.hermesFeishuCard.patchedGateway}:${shim}";
 in {
+  # llm-agents.nix overlay — 提供 agent-browser、claude-code 等 AI 编码工具
+  nixpkgs.overlays = [ inputs.llm-agents.overlays.default ];
+
   # 全局软件包
-  environment.systemPackages = with pkgs; [ nodejs_22 ] ++ [ hermesWrapper ];
+  environment.systemPackages = with pkgs; [ nodejs_22 gh ] ++ [ hermesWrapper ];
 
   # 插件开关
   services.hermesFeishuCard.enable = true;  # 飞书流式卡片
@@ -229,12 +233,16 @@ in {
     extraDependencyGroups = [ "feishu" "hindsight" "edge-tts" "voice" "messaging" ];
 
     # ── 额外系统包 ──
-    extraPackages = [ portaudio ];  # portaudio 已由 overlay 强制 PulseAudio 后端
+    extraPackages = [ portaudio pkgs.playwright-driver.browsers pkgs.llm-agents.agent-browser ];
+    # portaudio 已由本地 derivation 编译 PulseAudio 后端
+    # playwright-driver.browsers + agent-browser: 浏览器工具集
 
     # ── 非机密环境变量（写入 .env 第一部分）──
     environment = {
       PULSE_SERVER = "/mnt/wslg/PulseServer";   # WSLg 音频服务
       PYTHONPATH = pythonPath;                    # Python 模块搜索路径
+      PLAYWRIGHT_BROWSERS_PATH = "${pkgs.playwright-driver.browsers}";  # 浏览器工具集
+      AGENT_BROWSER_EXECUTABLE_PATH = "${pkgs.playwright-driver.browsers}/chromium-1223/chrome-linux64/chrome";
     };
 
     # ── 机密环境变量（追加入 .env 第二部分）──
