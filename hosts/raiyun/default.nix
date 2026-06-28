@@ -1,5 +1,5 @@
 # hosts/raiyun/default.nix — 雨云 VPS 最小变体
-# 阶段一：只跑起 NixOS + SSH，手动运行 mihomo
+# 带 mihomo 代理服务（首次启动后上传配置到 /opt/mihomo/ 即可) 
 { config, lib, pkgs, ... }:
 {
   imports = [
@@ -32,4 +32,26 @@
 
   # 防火墙 — 放行 SSH
   networking.firewall.allowedTCPPorts = [ 22 ];
+
+  # 初始 root 密码（首次登录后立刻改掉，rebuild 不会覆盖）
+  users.users.root.initialPassword = "nixos";
+
+  # Mihomo 代理 — 二进制来自 nixpkgs，配置手动上传
+  # 首次启动后：SFTP 传 config.yaml + geodata 到 /opt/mihomo/，然后 systemctl restart mihomo
+  # 重启上限：5 分钟内最多 3 次，避免缺配置时无限重试
+  systemd.tmpfiles.rules = [ "d /opt/mihomo 0755 root root -" ];
+  systemd.services.mihomo = {
+    description = "Mihomo Proxy";
+    after = [ "network.target" ];
+    wantedBy = [ "multi-user.target" ];
+    startLimitBurst = 3;
+    startLimitIntervalSec = 300;
+    serviceConfig = {
+      User = "root";
+      WorkingDirectory = "/opt/mihomo";
+      ExecStart = "${pkgs.mihomo}/bin/mihomo -d /opt/mihomo -f /opt/mihomo/config.yaml";
+      Restart = "on-failure";
+      RestartSec = 10;
+    };
+  };
 }
