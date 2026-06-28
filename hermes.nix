@@ -90,7 +90,28 @@ let
                 _gw.__path__.insert(0, _patched)
         except Exception:
             pass
-   '';
+
+    # ⑦ web_search 代理注入 — 劫持 httpx，从 HERMES_SEARCH_PROXY 环境变量读取代理
+    _search_proxy = _os.environ.get("HERMES_SEARCH_PROXY", "")
+    if _search_proxy:
+        try:
+            import httpx as _httpx
+            _orig_async_init = _httpx.AsyncClient.__init__
+            _orig_client_init = _httpx.Client.__init__
+
+            def _patched_async_init(self, *args, **kwargs):
+                kwargs.setdefault("proxy", _search_proxy)
+                _orig_async_init(self, *args, **kwargs)
+
+            def _patched_client_init(self, *args, **kwargs):
+                kwargs.setdefault("proxy", _search_proxy)
+                _orig_client_init(self, *args, **kwargs)
+
+            _httpx.AsyncClient.__init__ = _patched_async_init
+            _httpx.Client.__init__ = _patched_client_init
+        except Exception:
+            pass
+  '';
 
   # ═══════════════════════════════════════════════
   # CLI wrapper — hermes-w 命令
@@ -123,6 +144,10 @@ in let
   # Gateway systemd 单元、.env 文件、CLI wrapper 三处共用同一值。
   # 包含: feishu-card 包 + 补丁版 gateway + sitecustomize.py shim
   pythonPath = "${config.services.hermesFeishuCard.package}/lib/python3.12/site-packages:${config.services.hermesFeishuCard.patchedGateway}:${shim}";
+  # ═══════════════════════════════════════════════
+  # MiMo TTS 代理 Python — 含 fastapi/uvicorn/httpx/pydantic
+  ttsPython = pkgs.python3.withPackages (ps: with ps; [ fastapi uvicorn httpx python-dotenv pydantic ]);
+
 in {
   # llm-agents.nix overlay — 提供 agent-browser、claude-code 等 AI 编码工具
   nixpkgs.overlays = [ inputs.llm-agents.overlays.default ];
@@ -159,12 +184,15 @@ in {
         provider = "deepseek";
       };
 
-      # TTS — Edge 中文语音（小晓）
+      # TTS — 自定义 MiMo 提供商（xiaomiTTS2OpenAITTSAPI 代理）
       tts = {
-        provider = "edge";
-        edge = {
-          voice = "zh-CN-XiaoxiaoNeural";
-          speed = 1.2;
+        provider = "mimo";
+        providers = {
+          mimo = {
+            type = "command";
+            command = "${pkgs.python3}/bin/python3 /var/lib/hermes/workspace/projects/our/xiaomiTTS2OpenAITTSAPI/hermes_mimo_tts_wrapper.py {input_path} {output_path}";
+            output_format = "mp3";
+          };
         };
       };
 
@@ -230,7 +258,7 @@ in {
     };
 
     # ── Python 依赖组 ──
-    extraDependencyGroups = [ "feishu" "hindsight" "edge-tts" "voice" "messaging" ];
+    extraDependencyGroups = [ "feishu" "hindsight" "voice" "messaging" ];
 
     # ── 额外系统包 ──
     extraPackages = [ portaudio pkgs.playwright-driver.browsers pkgs.llm-agents.agent-browser ];
@@ -243,8 +271,10 @@ in {
       PYTHONPATH = pythonPath;                    # Python 模块搜索路径
       PLAYWRIGHT_BROWSERS_PATH = "${pkgs.playwright-driver.browsers}";  # 浏览器工具集
       AGENT_BROWSER_EXECUTABLE_PATH = "${pkgs.playwright-driver.browsers}/chromium-1223/chrome-linux64/chrome";
+      # API Server — hermes-desktop / OpenAI 兼容前端接入端口
+      API_SERVER_HOST = "127.0.0.1";
+      API_SERVER_PORT = "8642";
     };
-
     # ── 机密环境变量（追加入 .env 第二部分）──
     environmentFiles = [ "/var/lib/hermes/.hermes/.env.secrets" ];
   };
@@ -260,4 +290,22 @@ in {
     "LD_LIBRARY_PATH=${pkgs.libpulseaudio}/lib"   # PortAudio dlopen libpulse 需要
     "no_proxy=localhost,127.0.0.1,::1"
   ];
+
+  # ═══════════════════════════════════════════════
+  # MiMo TTS 代理服务 — xiaomiTTS2OpenAITTSAPI
+  # ═══════════════════════════════════════════════
+  systemd.services.xiaomi-tts-proxy = {
+    description = "Xiaomi MiMo TTS → OpenAI Compatible Proxy";
+    after = [ "network.target" ];
+    wantedBy = [ "multi-user.target" ];
+    serviceConfig = {
+      User = "hermes";
+      Group = "hermes";
+      WorkingDirectory = "/var/lib/hermes/workspace/projects/our/xiaomiTTS2OpenAITTSAPI";
+      ExecStart = "${ttsPython}/bin/python3 -m uvicorn main:app --host 127.0.0.1 --port 8080";
+      EnvironmentFile = "/var/lib/hermes/.hermes/.env.secrets";
+      Restart = "always";
+      RestartSec = 5;
+    };
+  };
 }
