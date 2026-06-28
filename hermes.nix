@@ -254,6 +254,9 @@ in {
           command = "npx";
           args = [ "-y" "@upstash/context7-mcp" ];
         };
+        electerm = {
+          url = "http://172.24.32.1:30837/mcp";
+        };
       };
     };
 
