@@ -19,6 +19,28 @@
   wsl.enable = true;
   wsl.defaultUser = "xavier";
 
+  # Podman 容器运行时
+  virtualisation.podman = {
+    enable = true;
+    dockerCompat = true;
+  };
+
   # WSL2 独有工具（Node.js、GitHub CLI）
   environment.systemPackages = with pkgs; [ nodejs_22 gh ];
+
+  # Mihomo 代理 — 极简 systemd 服务
+  # 不用 nixpkgs services.mihomo，避免 PrivateUsers/DynamicUser 沙箱冲突
+  systemd.services.mihomo = {
+    description = "Mihomo Proxy";
+    after = [ "network.target" ];
+    wantedBy = [ "multi-user.target" ];
+    serviceConfig = {
+      User = "hermes";
+      Group = "hermes";
+      WorkingDirectory = "/var/lib/hermes/workspace/projects/our/mihomo";
+      ExecStart = "${pkgs.mihomo}/bin/mihomo -d /var/lib/hermes/workspace/projects/our/mihomo -f /var/lib/hermes/workspace/projects/our/mihomo/config.yaml";
+      Restart = "always";
+      RestartSec = 5;
+    };
+  };
 }

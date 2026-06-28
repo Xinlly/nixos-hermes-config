@@ -13,9 +13,12 @@
     hermes-feishu-card.flake = false;
     # llm-agents.nix — AI 编码代理软件包（含 agent-browser CLI）
     llm-agents.url = "github:numtide/llm-agents.nix";
+    # disko — 声明式分区
+    disko.url = "github:nix-community/disko";
+    disko.inputs.nixpkgs.follows = "nixpkgs";
   };
 
-  outputs = { self, nixpkgs, nixos-wsl, hermes-agent, ... }@inputs: {
+  outputs = { self, nixpkgs, nixos-wsl, hermes-agent, disko, ... }@inputs: {
     # ── 变体：WSL2 Hermes 全功能开发工作站 ──
     nixosConfigurations.nixos = nixpkgs.lib.nixosSystem {
       system = "x86_64-linux";
@@ -30,13 +33,14 @@
       ];
     };
 
-    # ── 变体：雨云 VPS（mihomo 代理，无 Hermes）──
-    # nixosConfigurations.raiyun = nixpkgs.lib.nixosSystem {
-    #   system = "x86_64-linux";
-    #   specialArgs = { inherit inputs; };
-    #   modules = [
-    #     ./hosts/raiyun/default.nix
-    #   ];
-    # };
+    # ── 变体：雨云 VPS（最小 NixOS，手动运行 mihomo）──
+    nixosConfigurations.raiyun = nixpkgs.lib.nixosSystem {
+      system = "x86_64-linux";
+      specialArgs = { inherit inputs; };
+      modules = [
+        disko.nixosModules.disko
+        ./hosts/raiyun/default.nix
+      ];
+    };
   };
 }

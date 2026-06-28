@@ -10,9 +10,4 @@
   # 基础工具（所有主机通用）
   environment.systemPackages = with pkgs; [ git vim wget ];
 
-  # Podman 容器运行时
-  virtualisation.podman = {
-    enable = true;
-    dockerCompat = true;
-  };
 }
