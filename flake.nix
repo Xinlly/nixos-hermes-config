@@ -1,4 +1,5 @@
 # flake.nix — Nix Flake 入口，声明所有输入源和系统配置模块
+# v0.4.0: 模块化 — hosts/<name>/ 变体模式，支持多机部署
 {
   inputs = {
     # NixOS 官方 nixpkgs，跟随 unstable 分支
@@ -15,22 +16,27 @@
   };
 
   outputs = { self, nixpkgs, nixos-wsl, hermes-agent, ... }@inputs: {
-    # 唯一的 NixOS 系统配置：主机名 nixos，x86_64 架构
+    # ── 变体：WSL2 Hermes 全功能开发工作站 ──
     nixosConfigurations.nixos = nixpkgs.lib.nixosSystem {
       system = "x86_64-linux";
-      specialArgs = { inherit inputs; };  # 所有 flake input 传给模块
+      specialArgs = { inherit inputs; };
       modules = [
-        nixos-wsl.nixosModules.default      # WSL2 支持
-        hermes-agent.nixosModules.default   # Hermes 服务及 CLI
-        ./configuration.nix                 # NixOS 基础配置
-        ./network.nix                       # 网络接口配置
-        ./proxy.nix                         # 系统代理 shell 函数
-        ./users.nix                         # 用户 & sudo 权限
-        ./hermes.nix                        # Hermes Agent 核心配置（含 portaudio 本地编译）
-        ./hindsight.nix                     # Hindsight 记忆引擎
-        ./modules/feishu-card.nix           # 飞书流式卡片模块
-        ./modules/vban-receiver.nix         # VBAN 音频接收器模块
+        nixos-wsl.nixosModules.default
+        hermes-agent.nixosModules.default
+        ./hosts/wsl/default.nix
+        # 以上模块已通过 imports 链式引入所有子模块：
+        #   hosts/wsl/default.nix → common/* + users + hermes
+        #   hosts/wsl/hermes.nix  → modules/hermes/*
       ];
     };
+
+    # ── 变体：雨云 VPS（mihomo 代理，无 Hermes）──
+    # nixosConfigurations.raiyun = nixpkgs.lib.nixosSystem {
+    #   system = "x86_64-linux";
+    #   specialArgs = { inherit inputs; };
+    #   modules = [
+    #     ./hosts/raiyun/default.nix
+    #   ];
+    # };
   };
 }
