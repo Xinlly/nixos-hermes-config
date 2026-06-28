@@ -14,7 +14,7 @@ Voicemeeter Banana (Windows)
 
 ### 主方案：portaudio 原生 PulseAudio 后端
 
-hermes.nix 中的 `portaudio` derivation：
+`modules/hermes/runtime.nix` 中的 `portaudio` derivation：
 - cmake + libpulseaudio.dev → 编译时链接 libpulse-simple
 - 关 ALSA/JACK/OSS，只保留 PulseAudio
 - PortAudio 原生看到 vban_mic → Hermes 用 sd.InputStream 走真实设备
@@ -47,8 +47,12 @@ ldd libportaudio.so | grep pulse  # 应有 libpulse-simple
 
 ## 相关文件
 
-- hermes.nix：portaudio derivation + ⑥劫持 + extraPackages
-- modules/vban-receiver.nix：vban-receiver.service + pipe-source
-- flake.nix：模块列表
-- users.nix：sudo env_keep 代理变量
-- scripts/vban-receiver.py：独立测试脚本（不参与部署）
+- `modules/hermes/runtime.nix`：portaudio derivation + shim (sitecustomize.py)
+- `modules/hermes/agent.nix`：extraPackages (audio + browser)
+- `modules/hermes/vban-receiver.nix`：vban-receiver.service + pipe-source
+- `modules/hermes/services.nix`：systemd LD_LIBRARY_PATH (libpulse)
+- `hosts/wsl/hermes.nix`：Hermes 子模块聚合入口
+- `hosts/wsl/default.nix`：WSL2 变体入口
+- `hosts/wsl/users.nix`：sudo env_keep 代理变量
+- `flake.nix`：flakes 入口（nixosConfigurations.nixos）
+- `scripts/vban-receiver.py`：独立测试脚本（不参与部署）
