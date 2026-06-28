@@ -16,9 +16,12 @@
     # disko — 声明式分区
     disko.url = "github:nix-community/disko";
     disko.inputs.nixpkgs.follows = "nixpkgs";
+    # nixos-anywhere — 远程安装工具（复用 nixpkgs 缓存避免重复下载）
+    nixos-anywhere.url = "github:nix-community/nixos-anywhere";
+    nixos-anywhere.inputs.nixpkgs.follows = "nixpkgs";
   };
 
-  outputs = { self, nixpkgs, nixos-wsl, hermes-agent, disko, ... }@inputs: {
+  outputs = { self, nixpkgs, nixos-wsl, hermes-agent, disko, nixos-anywhere, ... }@inputs: {
     # ── 变体：WSL2 Hermes 全功能开发工作站 ──
     nixosConfigurations.nixos = nixpkgs.lib.nixosSystem {
       system = "x86_64-linux";
@@ -42,5 +45,7 @@
         ./hosts/raiyun/default.nix
       ];
     };
+
+    packages.x86_64-linux.nixos-anywhere = nixos-anywhere.packages.x86_64-linux.default;
   };
 }
