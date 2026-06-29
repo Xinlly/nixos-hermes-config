@@ -1,26 +1,36 @@
-# hosts/raiyun/default.nix — 雨云 VPS 最小变体
-# 带 mihomo 代理服务（首次启动后上传配置到 /opt/mihomo/ 即可) 
-{ config, lib, pkgs, ... }:
+# hosts/raiyun/default.nix — 雨云 VPS
+# KVM 部署：GPT + disko 分区，按 virtio 驱动匹配网络
+{ config, lib, pkgs, modulesPath, ... }:
 {
   imports = [
-    ./disk-config.nix
     ../../common/base.nix
     ../../common/proxy.nix
+    ./disk-config.nix
+    (modulesPath + "/profiles/qemu-guest.nix")  # virtio 驱动（磁盘/网络/balloon）
   ];
 
   # ══ 主机身份 ══
   networking.hostName = "raiyun";
   system.stateVersion = "26.05";
 
-  # 静态 IP（172.16.0.97/16，网关 172.16.0.1）
+  # nix 源用清华镜像（安装后 rebuild 可改为直连或代理）
+  nix.settings.substituters = [ "https://mirrors.tuna.tsinghua.edu.cn/nix-channels/store" ];
+  nix.settings.trusted-substituters = [ "https://mirrors.tuna.tsinghua.edu.cn/nix-channels/store" ];
+
+  # 静态 IP — systemd.network 按驱动匹配（MAC 重装会变，驱动不变）
   networking.useDHCP = false;
-  networking.interfaces.ens18 = {
-    ipv4.addresses = [{ address = "172.16.0.97"; prefixLength = 16; }];
+  systemd.network.enable = true;
+  systemd.network.networks."10-wan" = {
+    matchConfig.Driver = "virtio_net";
+    networkConfig.DHCP = "no";
+    address = [ "172.16.0.97/16" ];
+    routes = [
+      { routeConfig = { Gateway = "172.16.0.1"; GatewayOnLink = true; }; }
+    ];
   };
-  networking.defaultGateway = "172.16.0.1";
   networking.nameservers = [ "223.5.5.5" ];
 
-  # BIOS 引导（设备由 disko 管理）
+  # GPT + BIOS 引导，GRUB 由 disko 自动生成
   boot.loader.grub.enable = true;
 
   # SSH 远程管理
@@ -35,6 +45,10 @@
 
   # 初始 root 密码（首次登录后立刻改掉，rebuild 不会覆盖）
   users.users.root.initialPassword = "nixos";
+  # SSH 公钥认证（免密码登录）
+  users.users.root.openssh.authorizedKeys.keys = [
+    "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIM/bIU/pfKrNm20nW3pjzEsBqlK9XOWdaia6gCPVt3oe raiyun-nixos"
+  ];
 
   # Mihomo 代理 — 二进制来自 nixpkgs，配置手动上传
   # 首次启动后：SFTP 传 config.yaml + geodata 到 /opt/mihomo/，然后 systemctl restart mihomo
