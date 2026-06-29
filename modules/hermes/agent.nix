@@ -23,10 +23,10 @@ in
       security = { redact_secrets = true; };
       privacy = { redact_pii = false; };
 
-      # 模型 — DeepSeek V4 Pro
+      # 模型 — Xiaomi MiMo
       model = {
-        default = "deepseek-v4-pro";
-        provider = "deepseek";
+        default = "mimo-v2.5-pro";
+        provider = "xiaomi";
       };
 
       # TTS — 自定义 MiMo 提供商（xiaomiTTS2OpenAITTSAPI 代理）
@@ -79,6 +79,12 @@ in
         enabled = true;
         threshold = 0.50;
         target_ratio = 0.20;
+        model = "mimo-v2.5";
+      };
+
+      # 视觉 — MiMo 模型
+      vision = {
+        model = "mimo-v2.5";
       };
 
       # Agent 行为

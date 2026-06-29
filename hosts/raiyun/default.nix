@@ -4,8 +4,10 @@
 {
   imports = [
     ../../common/base.nix
+    ../../common/network.nix
     ../../common/proxy.nix
     ./disk-config.nix
+    ./derper.nix
     (modulesPath + "/profiles/qemu-guest.nix")  # virtio 驱动（磁盘/网络/balloon）
   ];
 
