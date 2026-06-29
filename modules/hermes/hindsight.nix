@@ -13,7 +13,7 @@
     environment = {
       HINDSIGHT_API_LLM_PROVIDER = "openai";
       HINDSIGHT_API_LLM_BASE_URL = "https://maas-coding-api.cn-huabei-1.xf-yun.com/v2";
-      HINDSIGHT_API_LLM_MODEL = "xopglm51";
+      HINDSIGHT_API_LLM_MODEL = "xopglmv47flash";
       HINDSIGHT_API_EMBEDDINGS_PROVIDER = "local";
       HINDSIGHT_API_EMBEDDINGS_LOCAL_MODEL = "all-MiniLM-L6-v2";
       HTTP_PROXY = "http://172.24.32.1:35353";
