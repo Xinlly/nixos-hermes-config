@@ -11,7 +11,7 @@
     ];
     environmentFiles = [ "/var/lib/hermes/.hermes/hindsight/.env" ];
     environment = {
-      HINDSIGHT_API_LLM_PROVIDER = "litellm";
+      HINDSIGHT_API_LLM_PROVIDER = "openai";
       HINDSIGHT_API_LLM_BASE_URL = "https://maas-coding-api.cn-huabei-1.xf-yun.com/v2";
       HINDSIGHT_API_LLM_MODEL = "xopglm51";
       HINDSIGHT_API_EMBEDDINGS_PROVIDER = "local";
