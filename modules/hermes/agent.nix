@@ -120,6 +120,7 @@ in
       platforms = {
         feishu = {
           extra = {
+            admins = [ "ou_b53871ae700f065e5a60836c2453120c" ];
             group_rules = {
               oc_ddc26398eb2e74e92bfd1dd34d0e54e8 = {
                 policy = "open";
