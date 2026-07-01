@@ -10,14 +10,15 @@
       "/var/lib/hermes/.hermes/hindsight/cache:/home/hindsight/.cache"
     ];
     environmentFiles = [ "/var/lib/hermes/.hermes/hindsight/.env" ];
+    extraOptions = [ "--add-host=host.containers.internal:host-gateway" ];
     environment = {
       HINDSIGHT_API_LLM_PROVIDER = "openai";
       HINDSIGHT_API_LLM_BASE_URL = "https://maas-coding-api.cn-huabei-1.xf-yun.com/v2";
-      HINDSIGHT_API_LLM_MODEL = "xopglmv47flash";
+      HINDSIGHT_API_LLM_MODEL = "xopdeepseekv32";
       HINDSIGHT_API_EMBEDDINGS_PROVIDER = "local";
       HINDSIGHT_API_EMBEDDINGS_LOCAL_MODEL = "all-MiniLM-L6-v2";
-      HTTP_PROXY = "http://172.24.32.1:35353";
-      HTTPS_PROXY = "http://172.24.32.1:35353";
+      HTTP_PROXY = "http://host.containers.internal:35353";
+      HTTPS_PROXY = "http://host.containers.internal:35353";
       NO_PROXY = "localhost,127.0.0.1,::1,.xf-yun.com,10.88.0.0/16";
     };
   };

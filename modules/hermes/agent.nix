@@ -74,17 +74,64 @@ in
         provider = "hindsight";
       };
 
-      # 上下文压缩
+      # 上下文压缩（何时触发）
       compression = {
         enabled = true;
         threshold = 0.50;
         target_ratio = 0.20;
-        model = "mimo-v2.5";
       };
 
-      # 视觉 — MiMo 模型
-      vision = {
-        model = "mimo-v2.5";
+      # 自定义提供商 — 讯飞 Coding Plan
+      providers = {
+        xfyun = {
+          base_url = "https://maas-coding-api.cn-huabei-1.xf-yun.com/v2";
+          key_env = "XFYUN_API_KEY";
+          name = "讯飞 Coding Plan";
+        };
+      };
+
+      # 主模型备援 — 主模型失败时自动切换
+      fallback_model = {
+        provider = "deepseek";
+        model = "deepseek-v4-pro";
+      };
+
+      # 辅助任务模型配置
+      auxiliary = {
+        vision = {
+          provider = "xiaomi";
+          model = "mimo-v2.5";
+        };
+        compression = {
+          provider = "xfyun";
+          model = "xopdeepseekv4flash";
+        };
+        # 轻量任务 — 全部用讯飞 V4 Flash
+        title_generation = { provider = "xfyun"; model = "xopdeepseekv4flash"; };
+        skills_hub        = { provider = "xfyun"; model = "xopdeepseekv4flash"; };
+        approval          = { provider = "xfyun"; model = "xopdeepseekv4flash"; };
+        mcp               = { provider = "xfyun"; model = "xopdeepseekv4flash"; };
+        tts_audio_tags    = { provider = "xfyun"; model = "xopglmv47flash"; };
+        profile_describer = { provider = "xfyun"; model = "xopdeepseekv4flash"; };
+        monitor           = { provider = "xfyun"; model = "xopdeepseekv4flash"; };
+      };
+
+      # 平台配置
+      platforms = {
+        feishu = {
+          extra = {
+            group_rules = {
+              oc_ddc26398eb2e74e92bfd1dd34d0e54e8 = {
+                policy = "open";
+                require_mention = true;
+              };
+              oc_6afdb726739fc42142e2533426bddeac = {
+                policy = "open";
+                require_mention = true;
+              };
+            };
+          };
+        };
       };
 
       # Agent 行为
@@ -99,7 +146,7 @@ in
         };
         playwright = {
           command = "npx";
-          args = [ "-y" "@playwright/mcp" ];
+          args = [ "-y" "@playwright/mcp" "--cdp-endpoint" "http://172.24.32.1:9222" ];
         };
         context7 = {
           command = "npx";
@@ -128,6 +175,7 @@ in
       # API Server — hermes-desktop / OpenAI 兼容前端接入端口
       API_SERVER_HOST = "127.0.0.1";
       API_SERVER_PORT = "8642";
+      # 飞书 — 允许所有用户（关闭 Pairing 授权）
     };
     # ── 机密环境变量（追加入 .env 第二部分）──
     environmentFiles = [ "/var/lib/hermes/.hermes/.env.secrets" ];
