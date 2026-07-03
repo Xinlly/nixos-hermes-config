@@ -4,6 +4,7 @@
   # SSH: 允许密码登录，禁止 root
   services.openssh = {
     enable = true;
+    ports = [ 2222 ];
     settings = {
       PasswordAuthentication = true;
       PermitRootLogin = "no";

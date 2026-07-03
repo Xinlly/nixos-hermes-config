@@ -15,5 +15,5 @@
   # 插件开关（仅此变体需要）
   services.hermesFeishuCard.enable = true;
   services.vbanReceiver.enable = true;
-  services.vbanReceiver.port = 6980;
+  services.vbanReceiver.port = 6981;
 }
