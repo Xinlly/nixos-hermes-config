@@ -3,7 +3,7 @@
     # shell 代理
     set-proxy() {
       local port=''${1:-35353}
-      local host=''${2:-172.24.32.1}
+      local host=''${2:-127.0.0.1}
       export http_proxy=http://$host:$port
       export https_proxy=http://$host:$port
       export HTTP_PROXY=http://$host:$port
@@ -25,7 +25,7 @@
     # nix-daemon 代理
     set-nix-proxy() {
       local port=''${1:-35353}
-      local host=''${2:-172.24.32.1}
+      local host=''${2:-127.0.0.1}
       local conf="/run/systemd/system/nix-daemon.service.d/proxy.conf"
       sudo mkdir -p "$(dirname "$conf")"
       sudo tee "$conf" > /dev/null << EOF

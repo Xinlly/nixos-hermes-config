@@ -146,14 +146,14 @@ in
         };
         playwright = {
           command = "npx";
-          args = [ "-y" "@playwright/mcp" "--cdp-endpoint" "http://172.24.32.1:9223" ];
+          args = [ "-y" "@playwright/mcp" "--cdp-endpoint" "http://127.0.0.1:9223" ];
         };
         context7 = {
           command = "npx";
           args = [ "-y" "@upstash/context7-mcp" ];
         };
         electerm = {
-          url = "http://172.24.32.1:30837/mcp";
+          url = "http://127.0.0.1:30837/mcp";
         };
       };
     };
