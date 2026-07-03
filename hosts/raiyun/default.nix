@@ -50,6 +50,7 @@
   # SSH 公钥认证（免密码登录）
   users.users.root.openssh.authorizedKeys.keys = [
     "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIM/bIU/pfKrNm20nW3pjzEsBqlK9XOWdaia6gCPVt3oe raiyun-nixos"
+    "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIJhH/o5wf7MrCd398BY/oKqYxQk63iOFxlidKaef1ZZk"
   ];
 
   # Mihomo 代理 — 二进制来自 nixpkgs，配置手动上传
