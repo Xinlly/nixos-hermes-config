@@ -5,7 +5,6 @@
 {
   imports = [
     ../../common/base.nix
-    ../../common/network.nix
     ../../common/proxy.nix
     ./users.nix
     ./hermes.nix
