@@ -23,6 +23,9 @@
     homeMode = "700";
     hashedPassword = "$6$B7C84eutPivySsm7$TBHkj.e0NC9lDRPDsU/kzT.Rkl/i.uKaZuD2DIIoQwUE0LTO0uyq07JE62uA6Q8QSYFZAEF3XeLAgoexWnBc61";
     extraGroups = [ "wheel" "networkmanager" "hermes" ];
+    openssh.authorizedKeys.keys = [
+      "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIJhH/o5wf7MrCd398BY/oKqYxQk63iOFxlidKaef1ZZk"
+    ];
   };
 
   # Hermes Agent 运行账户已由 hermes-agent 模块定义，此处不需重复
