@@ -129,12 +129,17 @@ let
     exec hermes "$@"
   '';
 
+  # pymupdf + 其传递依赖（含 mupdf Python 绑定和原生 .so）
+  # requiredPythonModules 展开传递依赖，makeSearchPath 构建完整 PYTHONPATH
+  pymupdfDeps = pkgs.python312.pkgs.requiredPythonModules [ pkgs.python312Packages.pymupdf pkgs.python312Packages.pymupdf4llm ];
+  pymupdfPath = lib.makeSearchPath "lib/python3.12/site-packages" pymupdfDeps;
+
   # ═══════════════════════════════════════════════
   # PYTHONPATH — 唯一定义点
   # ═══════════════════════════════════════════════
   # Gateway systemd 单元、.env 文件、CLI wrapper 三处共用同一值。
-  # 包含: feishu-card 包 + 补丁版 gateway + sitecustomize.py shim
-  pythonPath = "${config.services.hermesFeishuCard.package}/lib/python3.12/site-packages:${config.services.hermesFeishuCard.patchedGateway}:${shim}";
+  # 包含: feishu-card 包 + 补丁版 gateway + sitecustomize.py shim + pymupdf(含传递依赖)
+  pythonPath = "${config.services.hermesFeishuCard.package}/lib/python3.12/site-packages:${config.services.hermesFeishuCard.patchedGateway}:${shim}:${pymupdfPath}";
 in
 {
   options.services.hermesRuntime = {

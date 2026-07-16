@@ -7,7 +7,7 @@
     # WSL2 适配层
     nixos-wsl.url = "github:nix-community/NixOS-WSL/main";
     # Hermes Agent 发行版，锁定 0.17.0 版本（无版本 tag，用 commit SHA）
-    hermes-agent.url = "github:NousResearch/hermes-agent/857d0244af8498046c9c796e0a82bbc2fef79368";
+    hermes-agent.url = "github:NousResearch/hermes-agent/311a5b0a552be78f5c58807e2be1db02e3badcb0";
     # 飞书流式卡片侧车，来自本地 git 仓库（非 flake，需 flake=false）
     hermes-feishu-card.url = "path:/var/lib/hermes/workspace/projects/our/hermes-feishu-streaming-card";
     hermes-feishu-card.flake = false;

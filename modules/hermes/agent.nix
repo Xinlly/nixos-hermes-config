@@ -19,7 +19,10 @@ in
     # ── settings ──
     settings = {
       # 安全
-      approvals = { mode = "manual"; };
+      approvals = { 
+        mode = "smart";    # smart | manual | off — LLM 自动判断，不确定时弹确认
+        timeout = 60;      # 等待用户响应的秒数
+      };
       security = { redact_secrets = true; };
       privacy = { redact_pii = false; };
 
@@ -72,6 +75,10 @@ in
         memory_char_limit = 4000;
         user_char_limit = 1375;
         provider = "hindsight";
+        # 同步回忆 — 当前轮次立即注入记忆（避免 prefetch 延迟一轮）
+        sync_recall = true;
+        # 增加 prefetch 超时 — Hindsight API 典型耗时 1.5-4.4 秒
+        prefetch_join_timeout = 5.0;
       };
 
       # 上下文压缩（何时触发）
@@ -104,16 +111,16 @@ in
         };
         compression = {
           provider = "xfyun";
-          model = "xopdeepseekv4flash";
+          model = "xopdeepseekv32";
         };
-        # 轻量任务 — 全部用讯飞 V4 Flash
-        title_generation = { provider = "xfyun"; model = "xopdeepseekv4flash"; };
-        skills_hub        = { provider = "xfyun"; model = "xopdeepseekv4flash"; };
-        approval          = { provider = "xfyun"; model = "xopdeepseekv4flash"; };
-        mcp               = { provider = "xfyun"; model = "xopdeepseekv4flash"; };
+        # 轻量任务 — 全部用讯飞 DeepSeek V3.2
+        title_generation = { provider = "xfyun"; model = "xopdeepseekv32"; };
+        skills_hub        = { provider = "xfyun"; model = "xopdeepseekv32"; };
+        approval          = { provider = "xfyun"; model = "xopdeepseekv32"; };
+        mcp               = { provider = "xfyun"; model = "xopdeepseekv32"; };
         tts_audio_tags    = { provider = "xfyun"; model = "xopglmv47flash"; };
-        profile_describer = { provider = "xfyun"; model = "xopdeepseekv4flash"; };
-        monitor           = { provider = "xfyun"; model = "xopdeepseekv4flash"; };
+        profile_describer = { provider = "xfyun"; model = "xopdeepseekv32"; };
+        monitor           = { provider = "xfyun"; model = "xopdeepseekv32"; };
       };
 
       # 平台配置
@@ -126,6 +133,10 @@ in
                 require_mention = true;
               };
               oc_6afdb726739fc42142e2533426bddeac = {
+                policy = "open";
+                require_mention = true;
+              };
+              oc_c788a9c6a78ae06ddccf014a468fb74d = {
                 policy = "open";
                 require_mention = true;
               };
