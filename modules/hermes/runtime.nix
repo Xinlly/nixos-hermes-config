@@ -92,6 +92,17 @@ let
         except Exception:
             pass
 
+    # ⑤b 飞书卡片 cron 覆盖 — 优先使用 patched 版本
+    _pc = _os.environ.get("HERMES_PATCHED_CRON", "")
+    if _pc:
+        try:
+            import cron as _cron
+            _patched_cron = _pc + "/cron"
+            if _patched_cron not in _cron.__path__:
+                _cron.__path__.insert(0, _patched_cron)
+        except Exception:
+            pass
+
     # ⑦ web_search 代理注入 — 劫持 httpx，从 HERMES_SEARCH_PROXY 环境变量读取代理
     _search_proxy = _os.environ.get("HERMES_SEARCH_PROXY", "")
     if _search_proxy:
@@ -138,8 +149,8 @@ let
   # PYTHONPATH — 唯一定义点
   # ═══════════════════════════════════════════════
   # Gateway systemd 单元、.env 文件、CLI wrapper 三处共用同一值。
-  # 包含: feishu-card 包 + 补丁版 gateway + sitecustomize.py shim + pymupdf(含传递依赖)
-  pythonPath = "${config.services.hermesFeishuCard.package}/lib/python3.12/site-packages:${config.services.hermesFeishuCard.patchedGateway}:${shim}:${pymupdfPath}";
+  # 包含: feishu-card 包 + 补丁版 gateway + 补丁版 cron + sitecustomize.py shim + pymupdf(含传递依赖)
+  pythonPath = "${config.services.hermesFeishuCard.package}/lib/python3.12/site-packages:${config.services.hermesFeishuCard.patchedGateway}:${config.services.hermesFeishuCard.patchedCron}:${shim}:${pymupdfPath}";
 in
 {
   options.services.hermesRuntime = {

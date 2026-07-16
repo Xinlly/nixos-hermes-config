@@ -55,6 +55,29 @@ let
     print(f"[feishu-card] patched gateway/run.py ({len(patched)} bytes)")
     PYEOF
   '';
+
+  # ②b 打补丁的 cron/scheduler.py — AST 注入 cron delivery hook
+  # _deliver_result 函数在 cron/scheduler.py 中，不在 gateway/run.py 中
+  patchedCron = pkgs.runCommand "hermes-feishu-card-cron" {
+    nativeBuildInputs = [ pkgs.python312Packages.python feishuCardPackage ];
+  } ''
+    mkdir -p $out/cron
+    python3 <<PYEOF
+    from hermes_feishu_card.install.patcher import apply_cron_patch
+
+    src_path = "${inputs.hermes-agent}/cron/scheduler.py"
+    with open(src_path, encoding="utf-8") as f:
+        original = f.read()
+
+    patched = apply_cron_patch(original)
+
+    with open("$out/cron/scheduler.py", "w", encoding="utf-8") as f:
+        f.write(patched)
+    with open("$out/cron/__init__.py", "w", encoding="utf-8") as f:
+        f.write("")
+    print(f"[feishu-card] patched cron/scheduler.py ({len(patched)} bytes)")
+    PYEOF
+  '';
 in
 {
   options.services.hermesFeishuCard = {
@@ -63,6 +86,11 @@ in
       type = lib.types.package;
       internal = true;
       description = "Patched gateway/run.py derivation (set automatically)";
+    };
+    patchedCron = lib.mkOption {
+      type = lib.types.package;
+      internal = true;
+      description = "Patched cron/scheduler.py derivation (set automatically)";
     };
     package = lib.mkOption {
       type = lib.types.package;
@@ -74,6 +102,7 @@ in
   config = lib.mkIf cfg.enable {
     services.hermesFeishuCard.package = lib.mkDefault feishuCardPackage;
     services.hermesFeishuCard.patchedGateway = lib.mkDefault patchedGateway;
+    services.hermesFeishuCard.patchedCron = lib.mkDefault patchedCron;
 
     # ③ 侧车 systemd 服务 — 独立 HTTP 服务
     # 直跑 runner 模块（Type=simple），不再走 cli start 的 fork/exit 模式

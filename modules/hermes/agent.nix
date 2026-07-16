@@ -75,10 +75,6 @@ in
         memory_char_limit = 4000;
         user_char_limit = 1375;
         provider = "hindsight";
-        # 同步回忆 — 当前轮次立即注入记忆（避免 prefetch 延迟一轮）
-        sync_recall = true;
-        # 增加 prefetch 超时 — Hindsight API 典型耗时 1.5-4.4 秒
-        prefetch_join_timeout = 5.0;
       };
 
       # 上下文压缩（何时触发）
