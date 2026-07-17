@@ -106,8 +106,8 @@ in
           model = "mimo-v2.5";
         };
         compression = {
-          provider = "xfyun";
-          model = "xopdeepseekv32";
+          provider = "deepseek";
+          model = "deepseek-v4-flash";
         };
         # 轻量任务 — 全部用讯飞 DeepSeek V3.2
         title_generation = { provider = "xfyun"; model = "xopdeepseekv32"; };
@@ -121,6 +121,9 @@ in
 
       # 平台配置
       platforms = {
+        telegram = {
+          enable = false;
+        };
         feishu = {
           extra = {
             group_rules = {
