@@ -165,6 +165,10 @@ in
         electerm = {
           url = "http://127.0.0.1:30837/mcp";
         };
+        cua-driver = {
+          command = "/mnt/c/Users/Admin0/AppData/Local/Programs/Cua/cua-driver/bin/cua-driver.exe";
+          args = [ "mcp" ];
+        };
       };
     };
 

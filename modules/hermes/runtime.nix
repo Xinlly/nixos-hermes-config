@@ -134,12 +134,16 @@ let
   pymupdfDeps = pkgs.python312.pkgs.requiredPythonModules [ pkgs.python312Packages.pymupdf pkgs.python312Packages.pymupdf4llm ];
   pymupdfPath = lib.makeSearchPath "lib/python3.12/site-packages" pymupdfDeps;
 
+  # openpyxl + pandas（Excel 编辑能力，pandas 含 numpy 等 C 扩展）
+  officeDeps = pkgs.python312.pkgs.requiredPythonModules [ pkgs.python312Packages.openpyxl pkgs.python312Packages.pandas ];
+  officePath = lib.makeSearchPath "lib/python3.12/site-packages" officeDeps;
+
   # ═══════════════════════════════════════════════
   # PYTHONPATH — 唯一定义点
   # ═══════════════════════════════════════════════
   # Gateway systemd 单元、.env 文件、CLI wrapper 三处共用同一值。
-  # 包含: feishu-card 包 + 补丁版 gateway + sitecustomize.py shim + pymupdf(含传递依赖)
-  pythonPath = "${config.services.hermesFeishuCard.package}/lib/python3.12/site-packages:${config.services.hermesFeishuCard.patchedGateway}:${shim}:${pymupdfPath}";
+  # 包含: feishu-card 包 + 补丁版 gateway + sitecustomize.py shim + pymupdf + office(含传递依赖)
+  pythonPath = "${config.services.hermesFeishuCard.package}/lib/python3.12/site-packages:${config.services.hermesFeishuCard.patchedGateway}:${shim}:${pymupdfPath}:${officePath}";
 in
 {
   options.services.hermesRuntime = {

@@ -18,6 +18,11 @@
   wsl.enable = true;
   wsl.defaultUser = "xavier";
 
+  # WSL Interop — 隔离 Windows PATH + 持久化 binfmt 注册
+  wsl.interop.register = true;                          # 显式注册 binfmt，允许执行 .exe
+  wsl.interop.includePath = false;                       # NixOS 不注入 Windows 路径到 PATH
+  wsl.wslConf.interop.appendWindowsPath = false;         # WSL 也不注入 Windows 路径
+
   # Podman 容器运行时
   virtualisation.podman = {
     enable = true;
