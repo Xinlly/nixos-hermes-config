@@ -134,8 +134,8 @@ let
   pymupdfDeps = pkgs.python312.pkgs.requiredPythonModules [ pkgs.python312Packages.pymupdf pkgs.python312Packages.pymupdf4llm ];
   pymupdfPath = lib.makeSearchPath "lib/python3.12/site-packages" pymupdfDeps;
 
-  # openpyxl + pandas + markitdown（Excel编辑 + Office文档→Markdown，pandas/markitdown 含 numpy 等 C 扩展）
-  officeDeps = pkgs.python312.pkgs.requiredPythonModules [ pkgs.python312Packages.openpyxl pkgs.python312Packages.pandas pkgs.python312Packages.markitdown ];
+  # openpyxl + pandas + markitdown + xlsxwriter（Excel编辑 + Office文档→Markdown + 图表嵌入，pandas/markitdown 含 numpy 等 C 扩展）
+  officeDeps = pkgs.python312.pkgs.requiredPythonModules [ pkgs.python312Packages.openpyxl pkgs.python312Packages.pandas pkgs.python312Packages.markitdown pkgs.python312Packages.xlsxwriter ];
   officePath = lib.makeSearchPath "lib/python3.12/site-packages" officeDeps;
 
   # ═══════════════════════════════════════════════
