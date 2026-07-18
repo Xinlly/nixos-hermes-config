@@ -14,6 +14,15 @@
   networking.hostName = "nixos";
   system.stateVersion = "26.05";
 
+  # nix 源用清华镜像 + fallback 到官方源
+  nix.settings.substituters = [
+    "https://mirrors.tuna.tsinghua.edu.cn/nix-channels/store"
+    "https://cache.nixos.org/"
+  ];
+  nix.settings.trusted-public-keys = [
+    "cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY="
+  ];
+
   # WSL2 特性
   wsl.enable = true;
   wsl.defaultUser = "xavier";
