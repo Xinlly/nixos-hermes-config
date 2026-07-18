@@ -7,6 +7,9 @@
   nix.settings.experimental-features = [ "nix-command" "flakes" ];
   programs.nix-ld.enable = true;
 
+  # 时区配置（北京时间）
+  time.timeZone = "Asia/Shanghai";
+
   # 基础工具（所有主机通用）
   environment.systemPackages = with pkgs; [ git vim wget ];
 
