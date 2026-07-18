@@ -176,9 +176,15 @@ in
     extraDependencyGroups = [ "feishu" "hindsight" "voice" "messaging" ];
 
     # ── 额外系统包 ──
-    extraPackages = [ cfg.portaudio pkgs.playwright-driver.browsers pkgs.llm-agents.agent-browser ];
+    extraPackages = [
+      cfg.portaudio
+      pkgs.playwright-driver.browsers
+      pkgs.llm-agents.agent-browser
+      pkgs.uv  # Python包管理器，参考 nixos-hermes 项目
+    ];
     # portaudio 已由本地 derivation 编译 PulseAudio 后端
     # playwright-driver.browsers + agent-browser: 浏览器工具集
+    # uv: 参考 nixos-hermes 项目，用于运行时安装 Python 包
 
     # ── 非机密环境变量（写入 .env 第一部分）──
     environment = {
