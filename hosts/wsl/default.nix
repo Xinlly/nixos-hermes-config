@@ -23,9 +23,9 @@
     "cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY="
   ];
 
-  # 限制编译时CPU使用（平衡方案：4并行任务×2核心=8核心，留出2核心给系统）
+  # 限制编译时CPU使用
   nix.settings.max-jobs = 4;
-  nix.settings.cores = 2;
+  nix.settings.cores = 4;
 
   # WSL2 特性
   wsl.enable = true;
