@@ -182,6 +182,38 @@
         "type": "github"
       }
     },
+    "hermes-lark-streaming-aowen": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1783497491,
+        "narHash": "sha256-7IJWH4K6L8PMt9k0TAqnBbqBPl9udkDwzkgFuVl3m5Q=",
+        "owner": "Aowen-Nowor",
+        "repo": "hermes-lark-streaming",
+        "rev": "9b32d6bd7d2aaf03bd3eb378eb6a6ef2255e6621",
+        "type": "github"
+      },
+      "original": {
+        "owner": "Aowen-Nowor",
+        "repo": "hermes-lark-streaming",
+        "type": "github"
+      }
+    },
+    "hermes-plugin-voice-pipecat": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1778955628,
+        "narHash": "sha256-jwbn2UDB30vz7yJiKsXbPAJImhh3yjGLl8cB8IOSeMY=",
+        "owner": "tmylk",
+        "repo": "hermes-plugin-voice-pipecat",
+        "rev": "391239be6d0adac9121c6078e87e415530e7ce63",
+        "type": "github"
+      },
+      "original": {
+        "owner": "tmylk",
+        "repo": "hermes-plugin-voice-pipecat",
+        "type": "github"
+      }
+    },
     "llm-agents": {
       "inputs": {
         "blueprint": "blueprint",
@@ -451,6 +483,8 @@
       "inputs": {
         "disko": "disko",
         "hermes-agent": "hermes-agent",
+        "hermes-lark-streaming-aowen": "hermes-lark-streaming-aowen",
+        "hermes-plugin-voice-pipecat": "hermes-plugin-voice-pipecat",
         "llm-agents": "llm-agents",
         "nixos-anywhere": "nixos-anywhere",
         "nixos-wsl": "nixos-wsl",
