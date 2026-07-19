@@ -182,19 +182,6 @@
         "type": "github"
       }
     },
-    "hermes-feishu-card": {
-      "flake": false,
-      "locked": {
-        "lastModified": 1784247128,
-        "narHash": "sha256-eOaehhO0Uuf2rezeGuOAWAA7Q2WtecW2XD+Enw+fy0Y=",
-        "path": "/var/lib/hermes/workspace/projects/our/hermes-feishu-streaming-card",
-        "type": "path"
-      },
-      "original": {
-        "path": "/var/lib/hermes/workspace/projects/our/hermes-feishu-streaming-card",
-        "type": "path"
-      }
-    },
     "llm-agents": {
       "inputs": {
         "blueprint": "blueprint",
@@ -464,7 +451,6 @@
       "inputs": {
         "disko": "disko",
         "hermes-agent": "hermes-agent",
-        "hermes-feishu-card": "hermes-feishu-card",
         "llm-agents": "llm-agents",
         "nixos-anywhere": "nixos-anywhere",
         "nixos-wsl": "nixos-wsl",

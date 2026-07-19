@@ -7,13 +7,12 @@
     ../../modules/hermes/runtime.nix
     ../../modules/hermes/agent.nix
     ../../modules/hermes/services.nix
-    ../../modules/hermes/feishu-card.nix
+    ../../modules/hermes/hermes-plugins.nix
     ../../modules/hermes/vban-receiver.nix
     ../../modules/hermes/hindsight.nix
   ];
 
   # 插件开关（仅此变体需要）
-  services.hermesFeishuCard.enable = true;
   services.vbanReceiver.enable = true;
   services.vbanReceiver.port = 6981;
 }

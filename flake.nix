@@ -8,9 +8,6 @@
     nixos-wsl.url = "github:nix-community/NixOS-WSL/main";
     # Hermes Agent 发行版，锁定 0.17.0 版本（无版本 tag，用 commit SHA）
     hermes-agent.url = "github:NousResearch/hermes-agent/311a5b0a552be78f5c58807e2be1db02e3badcb0";
-    # 飞书流式卡片侧车，来自本地 git 仓库（非 flake，需 flake=false）
-    hermes-feishu-card.url = "path:/var/lib/hermes/workspace/projects/our/hermes-feishu-streaming-card";
-    hermes-feishu-card.flake = false;
     # llm-agents.nix — AI 编码代理软件包（含 agent-browser CLI）
     llm-agents.url = "github:numtide/llm-agents.nix";
     # disko — 声明式分区
