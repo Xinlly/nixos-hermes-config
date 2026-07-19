@@ -142,8 +142,9 @@ let
   # PYTHONPATH — 唯一定义点
   # ═══════════════════════════════════════════════
   # Gateway systemd 单元、.env 文件、CLI wrapper 三处共用同一值。
-  # 包含: feishu-card 包 + 补丁版 gateway + sitecustomize.py shim + pymupdf + office(含传递依赖)
-  pythonPath = "${config.services.hermesFeishuCard.package}/lib/python3.12/site-packages:${config.services.hermesFeishuCard.patchedGateway}:${shim}:${pymupdfPath}:${officePath}";
+  # 包含: sitecustomize.py shim + pymupdf + office(含传递依赖)
+  # 注: 飞书卡片插件通过 hermes-plugins.nix 的 extraPlugins 加载，不在此处
+  pythonPath = "${shim}:${pymupdfPath}:${officePath}";
 in
 {
   options.services.hermesRuntime = {
