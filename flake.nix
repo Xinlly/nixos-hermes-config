@@ -10,6 +10,9 @@
     hermes-agent.url = "github:NousResearch/hermes-agent/311a5b0a552be78f5c58807e2be1db02e3badcb0";
     # llm-agents.nix — AI 编码代理软件包（含 agent-browser CLI）
     llm-agents.url = "github:numtide/llm-agents.nix";
+    # Aowen-Nowor hermes-lark-streaming 插件（目录插件，非 flake）
+    hermes-lark-streaming-aowen.url = "github:Aowen-Nowor/hermes-lark-streaming";
+    hermes-lark-streaming-aowen.flake = false;
     # disko — 声明式分区
     disko.url = "github:nix-community/disko";
     disko.inputs.nixpkgs.follows = "nixpkgs";
