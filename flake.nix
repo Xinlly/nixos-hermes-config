@@ -6,8 +6,8 @@
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
     # WSL2 适配层
     nixos-wsl.url = "github:nix-community/NixOS-WSL/main";
-    # Hermes Agent 发行版，锁定 0.17.0 版本（无版本 tag，用 commit SHA）
-    hermes-agent.url = "github:NousResearch/hermes-agent/311a5b0a552be78f5c58807e2be1db02e3badcb0";
+    # Hermes Agent 发行版，锁定 0.18.2 版本（v2026.7.7.2，用 commit SHA）
+    hermes-agent.url = "github:NousResearch/hermes-agent/b7751df34688835a108e0d630f3495fc11f3df79";
     # llm-agents.nix — AI 编码代理软件包（含 agent-browser CLI）
     llm-agents.url = "github:numtide/llm-agents.nix";
     # Aowen-Nowor hermes-lark-streaming 插件（目录插件，非 flake）
