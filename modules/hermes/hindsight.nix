@@ -12,9 +12,9 @@
     environmentFiles = [ "/var/lib/hermes/.hermes/hindsight/.env" ];
     extraOptions = [ "--network=host" ];
     environment = {
-      HINDSIGHT_API_LLM_PROVIDER = "openai";
-      HINDSIGHT_API_LLM_BASE_URL = "https://maas-coding-api.cn-huabei-1.xf-yun.com/v2";
-      HINDSIGHT_API_LLM_MODEL = "xopdeepseekv32";
+      HINDSIGHT_API_LLM_PROVIDER = "deepseek";
+      HINDSIGHT_API_LLM_BASE_URL = "https://api.deepseek.com";
+      HINDSIGHT_API_LLM_MODEL = "deepseek-v4-flash";
       HINDSIGHT_API_EMBEDDINGS_PROVIDER = "local";
       HINDSIGHT_API_EMBEDDINGS_LOCAL_MODEL = "all-MiniLM-L6-v2";
       HTTP_PROXY = "http://127.0.0.1:35352";
