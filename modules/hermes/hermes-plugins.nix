@@ -2,15 +2,20 @@
 #
 # Aowen-Nowor hermes-lark-streaming v1.5.0
 # 目录插件（lark-oapi 已在 Hermes 密封 venv 中）
-{ pkgs, ... }:
+{ config, pkgs, lib, inputs, ... }:
 
 let
-  # 目录插件：直接复制源码到 Nix store
+  # 目录插件：从 flake inputs 引用，过滤不需要的文件
   hermesLarkStreamingAowen = pkgs.runCommand "hermes-lark-streaming-aowen-1.5.0" { } ''
     mkdir -p $out
-    cp -R ${/var/lib/hermes/workspace/projects/upstream/hermes-lark-streaming-aowen}/. $out/
-    # 清理非必要文件
-    rm -rf $out/.git $out/graphify-out $out/tests
+    # 只复制插件需要的文件，跳过 .git、graphify-out、tests
+    for f in ${inputs.hermes-lark-streaming-aowen}/*; do
+      base=$(basename "$f")
+      case "$base" in
+        .git|graphify-out|tests) ;;
+        *) cp -R "$f" $out/ ;;
+      esac
+    done
   '';
 in
 {
