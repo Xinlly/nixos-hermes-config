@@ -198,22 +198,6 @@
         "type": "github"
       }
     },
-    "hermes-plugin-voice-pipecat": {
-      "flake": false,
-      "locked": {
-        "lastModified": 1778955628,
-        "narHash": "sha256-jwbn2UDB30vz7yJiKsXbPAJImhh3yjGLl8cB8IOSeMY=",
-        "owner": "tmylk",
-        "repo": "hermes-plugin-voice-pipecat",
-        "rev": "391239be6d0adac9121c6078e87e415530e7ce63",
-        "type": "github"
-      },
-      "original": {
-        "owner": "tmylk",
-        "repo": "hermes-plugin-voice-pipecat",
-        "type": "github"
-      }
-    },
     "llm-agents": {
       "inputs": {
         "blueprint": "blueprint",
@@ -484,7 +468,6 @@
         "disko": "disko",
         "hermes-agent": "hermes-agent",
         "hermes-lark-streaming-aowen": "hermes-lark-streaming-aowen",
-        "hermes-plugin-voice-pipecat": "hermes-plugin-voice-pipecat",
         "llm-agents": "llm-agents",
         "nixos-anywhere": "nixos-anywhere",
         "nixos-wsl": "nixos-wsl",

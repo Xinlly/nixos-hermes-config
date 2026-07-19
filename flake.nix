@@ -13,9 +13,6 @@
     # Aowen-Nowor hermes-lark-streaming 插件（目录插件，非 flake）
     hermes-lark-streaming-aowen.url = "github:Aowen-Nowor/hermes-lark-streaming";
     hermes-lark-streaming-aowen.flake = false;
-    # tmylk hermes-plugin-voice-pipecat 插件（目录插件，非 flake）
-    hermes-plugin-voice-pipecat.url = "github:tmylk/hermes-plugin-voice-pipecat";
-    hermes-plugin-voice-pipecat.flake = false;
     # disko — 声明式分区
     disko.url = "github:nix-community/disko";
     disko.inputs.nixpkgs.follows = "nixpkgs";
