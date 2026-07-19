@@ -15,7 +15,6 @@ in
   # ═══════════════════════════════════════════════
   systemd.services.hermes-agent.serviceConfig.Environment = [
     "PYTHONPATH=${cfg.pythonPath}"
-    "HERMES_PATCHED_GATEWAY=${config.services.hermesFeishuCard.patchedGateway}"
     "LD_LIBRARY_PATH=${pkgs.libpulseaudio}/lib"   # PortAudio dlopen libpulse 需要
     "no_proxy=localhost,127.0.0.1,::1"
   ];
