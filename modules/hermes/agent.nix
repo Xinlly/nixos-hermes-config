@@ -197,8 +197,6 @@ in
       API_SERVER_PORT = "8642";
       # 时区配置（北京时间）
       HERMES_TIMEZONE = "Asia/Shanghai";
-      # Pipecat Voice Server — 允许本地浏览器参与者
-      VOICE_SERVER_ALLOWED_USERS = "caller";
     };
     # ── 机密环境变量（追加入 .env 第二部分）──
     environmentFiles = [ "/var/lib/hermes/.hermes/.env.secrets" ];
