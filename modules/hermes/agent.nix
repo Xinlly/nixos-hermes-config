@@ -51,17 +51,34 @@ in
         local = { model = "small"; };
       };
 
-      # 显示 — 中文、隐藏推理过程和费用
-      display = {
-        language = "zh";
-        show_reasoning = false;
-        show_cost = false;
-      };
-
       # 流式输出
       streaming = { enabled = true; };
 
-      # 终端 — 本地后端，cwd 与 workingDirectory 统一
+      # Lark Streaming 卡片配置
+      hermes_lark_streaming = {
+        panel_expanded = false;
+        streaming_panel_expanded = true;
+        print_strategy = "delay";
+        print_step = 4;
+        flush_interval_ms = 200;
+        card_ttl_sec = 600;
+        max_tool_steps = 20;
+        max_reasoning_rounds = 20;
+        footer = {
+          show_label = false;
+          fields = [
+            ["status" "elapsed" "model" "cost"]
+            ["tokens" "context"]
+          ];
+        };
+      };
+
+      # 显示 — 中文、显示推理过程
+      display = {
+        language = "zh";
+        show_reasoning = true;
+        show_cost = false;
+      };
       terminal = {
         backend = "local";
         timeout = 180;
