@@ -42,8 +42,8 @@
     dockerCompat = true;
   };
 
-  # WSL2 独有工具（Node.js、GitHub CLI）
-  environment.systemPackages = with pkgs; [ nodejs_22 gh ];
+  # WSL2 独有工具（Node.js、GitHub CLI、飞书 CLI）
+  environment.systemPackages = with pkgs; [ nodejs_22 gh feishu-cli ];
 
   # Mihomo 代理 — 极简 systemd 服务
   # 不用 nixpkgs services.mihomo，避免 PrivateUsers/DynamicUser 沙箱冲突
