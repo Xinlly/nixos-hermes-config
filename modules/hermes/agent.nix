@@ -28,7 +28,7 @@ in
 
       # 模型 — Xiaomi MiMo
       model = {
-        default = "mimo-v2.5-pro";
+        default = "mimo-v2.5";
         provider = "xiaomi";
       };
 
