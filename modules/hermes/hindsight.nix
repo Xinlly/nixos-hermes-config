@@ -8,6 +8,7 @@
     volumes = [
       "/var/lib/hermes/.hermes/hindsight/pg0:/home/hindsight/.pg0"
       "/var/lib/hermes/.hermes/hindsight/cache:/home/hindsight/.cache"
+      "/var/lib/hermes/.hermes/hindsight/patches/memory_engine.py:/app/api/hindsight_api/engine/memory_engine.py:ro"
     ];
     environmentFiles = [ "/var/lib/hermes/.hermes/hindsight/.env" ];
     extraOptions = [ "--network=host" ];
