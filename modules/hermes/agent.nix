@@ -171,6 +171,25 @@ in
       # 白名单工具组 — PoloAPI 限 128 tools，all=144，裁剪不必要组
       toolsets = [ "terminal" "file" "skills" "web" "vision" "tts" "todo" "memory" "session_search" "cronjob" "computer_use" "clarify" "execute_code" "delegate_task" "image_generate" "close_terminal" "read_terminal" "feishu_doc_read" "feishu_drive_add_comment" "feishu_drive_list_comments" "feishu_drive_list_comment_replies" "feishu_drive_reply_comment" "project_create" "project_list" "project_switch" ];
 
+      # Superpowers workflow 暂停：保留文件备份，停止自动加载；改用 Matt Pocock skills 试运行。
+      skills = {
+        disabled = [
+          "task-complexity-assessment"
+          "brainstorming"
+          "writing-plans"
+          "subagent-driven-development"
+          "test-driven-development"
+          "systematic-debugging"
+          "verification-before-completion"
+          "requesting-code-review"
+          "simplify-code"
+          "research-first-workflow"
+          "spike"
+          "skill-evaluation"
+          "plan"
+        ];
+      };
+
       # MCP 工具服务器
       mcp_servers = {
         fetch = {
