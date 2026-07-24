@@ -169,7 +169,7 @@ in
       # Agent 行为
       agent = { max_turns = 90; };
       # 白名单工具组 — PoloAPI 限 128 tools，all=144，裁剪不必要组
-      toolsets = [ "terminal" "file" "browser" "skills" "web" "vision" "tts" "todo" "memory" "session_search" "cronjob" "kanban" "computer_use" "clarify" "execute_code" "delegate_task" "image_generate" "close_terminal" "read_terminal" "feishu_doc_read" "feishu_drive_add_comment" "feishu_drive_list_comments" "feishu_drive_list_comment_replies" "feishu_drive_reply_comment" "project_create" "project_list" "project_switch" ];
+      toolsets = [ "terminal" "file" "browser" "skills" "web" "vision" "tts" "todo" "memory" "session_search" "cronjob" "computer_use" "clarify" "execute_code" "delegate_task" "image_generate" "close_terminal" "read_terminal" "feishu_doc_read" "feishu_drive_add_comment" "feishu_drive_list_comments" "feishu_drive_list_comment_replies" "feishu_drive_reply_comment" "project_create" "project_list" "project_switch" ];
 
       # MCP 工具服务器
       mcp_servers = {
@@ -188,10 +188,11 @@ in
         electerm = {
           url = "http://127.0.0.1:30837/mcp";
         };
-        cua-driver = {
-          command = "/mnt/c/Users/Admin0/AppData/Local/Programs/Cua/cua-driver/bin/cua-driver.exe";
-          args = [ "mcp" ];
-        };
+        # cua-driver disabled — PoloAPI 限 128 tools
+        # cua-driver = {
+        #   command = "/mnt/c/Users/Admin0/AppData/Local/Programs/Cua/cua-driver/bin/cua-driver.exe";
+        #   args = [ "mcp" ];
+        # };
       };
     };
 
