@@ -209,6 +209,14 @@ in
         electerm = {
           url = "http://127.0.0.1:30837/mcp";
         };
+        siyuan_sisyphus = {
+          command = "${pkgs.nodejs_22}/bin/node";
+          args = [ "/mnt/d/Users/Admin0/SiYuan/data/plugins/siyuan-plugins-mcp-sisyphus/mcp-server.cjs" ];
+          env = {
+            SIYUAN_API_URL = "http://127.0.0.1:6806";
+            SIYUAN_TOKEN = "\${SIYUAN_TOKEN}";
+          };
+        };
         # cua-driver disabled — PoloAPI 限 128 tools
         # cua-driver = {
         #   command = "/mnt/c/Users/Admin0/AppData/Local/Programs/Cua/cua-driver/bin/cua-driver.exe";
