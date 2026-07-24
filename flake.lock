@@ -221,6 +221,23 @@
         "type": "github"
       }
     },
+    "matt-workflows": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1784905207,
+        "narHash": "sha256-bdzFHG9lnjkA+XL0R55Xyc4u2MVyKqJXebbbUx+75q8=",
+        "owner": "Xinlly",
+        "repo": "skills",
+        "rev": "88c4a7724a9cac0af5884a70764df9949a85149a",
+        "type": "github"
+      },
+      "original": {
+        "owner": "Xinlly",
+        "ref": "88c4a77",
+        "repo": "skills",
+        "type": "github"
+      }
+    },
     "nix-vm-test": {
       "inputs": {
         "nixpkgs": [
@@ -469,6 +486,7 @@
         "hermes-agent": "hermes-agent",
         "hermes-lark-streaming-aowen": "hermes-lark-streaming-aowen",
         "llm-agents": "llm-agents",
+        "matt-workflows": "matt-workflows",
         "nixos-anywhere": "nixos-anywhere",
         "nixos-wsl": "nixos-wsl",
         "nixpkgs": "nixpkgs_4"

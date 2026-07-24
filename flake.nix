@@ -13,6 +13,9 @@
     # Aowen-Nowor hermes-lark-streaming 插件（目录插件，非 flake）
     hermes-lark-streaming-aowen.url = "github:Aowen-Nowor/hermes-lark-streaming";
     hermes-lark-streaming-aowen.flake = false;
+    # Xinlly/skills 中经审核的 Matt workflow Hermes 插件（目录插件，非 flake）
+    matt-workflows.url = "github:Xinlly/skills/88c4a77";
+    matt-workflows.flake = false;
     # disko — 声明式分区
     disko.url = "github:nix-community/disko";
     disko.inputs.nixpkgs.follows = "nixpkgs";
