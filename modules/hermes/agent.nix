@@ -172,7 +172,9 @@ in
       toolsets = [ "terminal" "file" "skills" "web" "vision" "tts" "todo" "memory" "session_search" "cronjob" "computer_use" "clarify" "execute_code" "delegate_task" "image_generate" "close_terminal" "read_terminal" "feishu_doc_read" "feishu_drive_add_comment" "feishu_drive_list_comments" "feishu_drive_list_comment_replies" "feishu_drive_reply_comment" "project_create" "project_list" "project_switch" ];
 
       # Superpowers workflow 暂停：保留文件备份，停止自动加载；改用 Matt Pocock skills 试运行。
+      # 仅暴露 hermes/skills 适配层，不直接加载上游完整 skills/ 树。
       skills = {
+        external_dirs = [ "/var/lib/hermes/workspace/projects/our/skills/hermes/skills" ];
         disabled = [
           "task-complexity-assessment"
           "brainstorming"
