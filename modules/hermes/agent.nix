@@ -177,11 +177,10 @@ in
           command = "npx";
           args = [ "-y" "@modelcontextprotocol/server-fetch" ];
         };
-        # playwright disabled — PoloAPI 限 128 tools，已用 CDP browser 替代
-        # playwright = {
-        #   command = "npx";
-        #   args = [ "-y" "@playwright/mcp" "--cdp-endpoint" "http://127.0.0.1:9223" ];
-        # };
+        playwright = {
+          command = "npx";
+          args = [ "-y" "@playwright/mcp" "--cdp-endpoint" "http://127.0.0.1:9223" ];
+        };
         context7 = {
           command = "npx";
           args = [ "-y" "@upstash/context7-mcp" ];
