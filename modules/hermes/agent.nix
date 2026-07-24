@@ -57,7 +57,7 @@ in
       # Lark Streaming 卡片配置
       hermes_lark_streaming = {
         panel_expanded = false;
-        streaming_panel_expanded = true;
+        streaming_panel_expanded = false;
         print_strategy = "delay";
         print_step = 4;
         flush_interval_ms = 200;
