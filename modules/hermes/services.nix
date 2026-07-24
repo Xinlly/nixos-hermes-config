@@ -17,6 +17,7 @@ in
     "PYTHONPATH=${cfg.pythonPath}"
     "LD_LIBRARY_PATH=${pkgs.libpulseaudio}/lib"   # PortAudio dlopen libpulse 需要
     "no_proxy=localhost,127.0.0.1,::1"
+    "HTTPS_PROXY=http://127.0.0.1:35352"
   ];
 
   # ═══════════════════════════════════════════════

@@ -101,12 +101,17 @@ in
         target_ratio = 0.20;
       };
 
-      # 自定义提供商 — 讯飞 Coding Plan
+      # 自定义提供商
       providers = {
         xfyun = {
           base_url = "https://maas-coding-api.cn-huabei-1.xf-yun.com/v2";
           key_env = "XFYUN_API_KEY";
           name = "讯飞 Coding Plan";
+        };
+        poloapi = {
+          base_url = "https://poloapi.top/v1";
+          key_env = "POLOAPI_API_KEY";
+          name = "PoloAPI";
         };
       };
 
@@ -163,7 +168,8 @@ in
 
       # Agent 行为
       agent = { max_turns = 90; };
-      toolsets = [ "all" ];
+      # 白名单工具组 — PoloAPI 限 128 tools，all=144，裁剪不必要组
+      toolsets = [ "terminal" "file" "browser" "skills" "web" "vision" "tts" "todo" "memory" "session_search" "cronjob" "kanban" "computer_use" "clarify" "execute_code" "delegate_task" "image_generate" "close_terminal" "read_terminal" "feishu_doc_read" "feishu_drive_add_comment" "feishu_drive_list_comments" "feishu_drive_list_comment_replies" "feishu_drive_reply_comment" "project_create" "project_list" "project_switch" ];
 
       # MCP 工具服务器
       mcp_servers = {
