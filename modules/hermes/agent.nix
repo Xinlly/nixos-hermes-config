@@ -161,6 +161,14 @@ in
                 policy = "open";
                 require_mention = true;
               };
+              oc_c5d502d7f1333cabc66ec4d5038ecbb1 = {
+                policy = "open";
+                require_mention = false;
+              };
+              oc_d549896310272064b5c2eba1d97bca0c = {
+                policy = "open";
+                require_mention = false;
+              };
             };
           };
         };
