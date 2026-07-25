@@ -202,10 +202,6 @@ in
 
       # MCP 工具服务器
       mcp_servers = {
-        fetch = {
-          command = "npx";
-          args = [ "-y" "@modelcontextprotocol/server-fetch" ];
-        };
         playwright = {
           command = "npx";
           args = [ "-y" "@playwright/mcp" "--cdp-endpoint" "http://127.0.0.1:9223" ];

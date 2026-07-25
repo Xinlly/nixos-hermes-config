@@ -17,6 +17,7 @@
       HINDSIGHT_API_LLM_MODEL = "deepseek-v4-flash";
       HINDSIGHT_API_EMBEDDINGS_PROVIDER = "local";
       HINDSIGHT_API_EMBEDDINGS_LOCAL_MODEL = "all-MiniLM-L6-v2";
+      HINDSIGHT_API_WORKER_ID = "hindsight-prod";
       HTTP_PROXY = "http://127.0.0.1:35353";
       HTTPS_PROXY = "http://127.0.0.1:35353";
       NO_PROXY = "localhost,127.0.0.1,::1,.xf-yun.com,10.88.0.0/16";
