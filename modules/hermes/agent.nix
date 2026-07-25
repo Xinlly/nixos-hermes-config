@@ -258,8 +258,12 @@ in
       API_SERVER_PORT = "8642";
       # 时区配置（北京时间）
       HERMES_TIMEZONE = "Asia/Shanghai";
-      HTTP_PROXY = "http://127.0.0.1:35350";
-      HTTPS_PROXY = "http://127.0.0.1:35350";
+      HTTP_PROXY = "http://127.0.0.1:35353";
+      HTTPS_PROXY = "http://127.0.0.1:35353";
+      HERMES_SEARCH_PROXY = "http://127.0.0.1:35353";
+      AGENT_BROWSER_PROXY = "http://127.0.0.1:35353";
+      AGENT_BROWSER_PROXY_BYPASS = "localhost,127.0.0.1";
+      AGENT_BROWSER_AUTO_CONNECT = "true";
     };
     # ── 机密环境变量（追加入 .env 第二部分）──
     environmentFiles = [ "/var/lib/hermes/.hermes/.env.secrets" ];
