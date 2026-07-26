@@ -165,6 +165,10 @@ in
                 policy = "open";
                 require_mention = false;
               };
+              oc_0b9b107979ff669cca767c6a796e5599 = {
+                policy = "open";
+                require_mention = false;
+              };
               oc_d549896310272064b5c2eba1d97bca0c = {
                 policy = "open";
                 require_mention = false;
