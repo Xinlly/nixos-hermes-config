@@ -234,7 +234,7 @@ in
     };
 
     # ── Python 依赖组 ──
-    extraDependencyGroups = [ "feishu" "hindsight" "voice" "messaging" ];
+    extraDependencyGroups = [ "feishu" "hindsight" "voice" "messaging" "anthropic" ];
 
     # ── 额外系统包 ──
     extraPackages = [
