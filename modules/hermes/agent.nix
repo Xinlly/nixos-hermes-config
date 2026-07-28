@@ -124,8 +124,8 @@ in
       # 辅助任务模型配置
       auxiliary = {
         vision = {
-          provider = "xiaomi";
-          model = "mimo-v2.5";
+          provider = "minimax-cn";
+          model = "MiniMax-M3";
         };
         compression = {
           provider = "deepseek";
