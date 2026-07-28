@@ -26,10 +26,10 @@ in
       security = { redact_secrets = true; };
       privacy = { redact_pii = false; };
 
-      # 模型 — Xiaomi MiMo
+      # 模型 — MiniMax M3 (国内版)
       model = {
-        default = "mimo-v2.5";
-        provider = "xiaomi";
+        default = "MiniMax-M3";
+        provider = "minimax-cn";
       };
 
       # TTS — 自定义 MiMo 提供商（xiaomiTTS2OpenAITTSAPI 代理）
