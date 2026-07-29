@@ -258,6 +258,7 @@ in
       API_SERVER_PORT = "8642";
       # 时区配置（北京时间）
       HERMES_TIMEZONE = "Asia/Shanghai";
+      MINIMAX_CN_BASE_URL = "https://api.minimaxi.com/anthropic";
       HTTP_PROXY = "http://127.0.0.1:35353";
       HTTPS_PROXY = "http://127.0.0.1:35353";
       HERMES_SEARCH_PROXY = "http://127.0.0.1:35353";
