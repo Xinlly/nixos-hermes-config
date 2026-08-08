@@ -2,6 +2,40 @@
 #
 # 变体身份常量 + 模块聚合。新增云服务器变体时复制此文件改名即可。
 { config, lib, pkgs, ... }:
+let
+  # ═══════════════════════════════════════════════════════════
+  # lark-cli — 官方飞书 CLI（buildGoModule 自建）
+  # ═══════════════════════════════════════════════════════════
+  # nixpkgs 中尚无此包，参照 nixos-hermes 的 linear-cli 模式自行打包。
+  # 首次构建时 hash 会报错，按报错提示替换下方的 fakeHash 值。
+  lark-cli = pkgs.buildGoModule rec {
+    pname = "lark-cli";
+    version = "1.0.43";
+
+    src = pkgs.fetchFromGitHub {
+      owner = "larksuite";
+      repo = "cli";
+      rev = "v${version}";
+      hash = "sha256-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=";  # FIXME: first build will report correct hash
+    };
+
+    vendorHash = "sha256-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=";  # FIXME: first build will report correct hash
+
+    subPackages = [ "." ];
+
+    ldflags = [
+      "-s" "-w"
+      "-X github.com/larksuite/cli/internal/build.Version=v${version}"
+    ];
+
+    meta = with lib; {
+      description = "Official Lark/Feishu CLI tool — 200+ commands, 26 AI Agent Skills";
+      homepage = "https://github.com/larksuite/cli";
+      license = licenses.mit;
+      mainProgram = "lark-cli";
+    };
+  };
+in
 {
   imports = [
     ../../common/base.nix
@@ -43,7 +77,7 @@
   };
 
   # WSL2 独有工具（Node.js、GitHub CLI、飞书 CLI）
-  environment.systemPackages = with pkgs; [ nodejs_22 gh feishu-cli jq tcpdump openssl libreoffice poppler-utils ];
+  environment.systemPackages = with pkgs; [ nodejs_22 gh feishu-cli jq tcpdump openssl libreoffice poppler-utils lark-cli ];
 
   # Mihomo 代理 — 极简 systemd 服务
   # 不用 nixpkgs services.mihomo，避免 PrivateUsers/DynamicUser 沙箱冲突
