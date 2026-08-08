@@ -16,7 +16,7 @@ let
       owner = "larksuite";
       repo = "cli";
       rev = "v${version}";
-      hash = "sha256-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=";
+      hash = "sha256-NLSTxgIfHAzZ0PT2+zfKdOYSMFwmCWA26rQcD/WUnQ0=";
     };
 
     vendorHash = "sha256-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=";
