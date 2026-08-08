@@ -28,6 +28,10 @@ let
       "-X github.com/larksuite/cli/internal/build.Version=v${version}"
     ];
 
+    postInstall = ''
+      mv $out/bin/cli $out/bin/lark-cli
+    '';
+
     meta = with lib; {
       description = "Official Lark/Feishu CLI tool — 200+ commands, 26 AI Agent Skills";
       homepage = "https://github.com/larksuite/cli";
