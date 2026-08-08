@@ -19,7 +19,7 @@ let
       hash = "sha256-TextZLYbO9ZQksokOt0NHNmvPljd37H0d7k9nHV/KQQ=";
     };
 
-    vendorHash = "sha256-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=";  # FIXME: first build will report correct hash
+    vendorHash = "";  # use Go module proxy (faster than computing vendorHash)
 
     subPackages = [ "." ];
 
