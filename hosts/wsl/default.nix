@@ -21,7 +21,9 @@ let
 
     vendorHash = "sha256-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=";
 
-    env.GOPROXY = "https://goproxy.cn,https://goproxy.io,direct";
+    preBuild = ''
+      export GOPROXY=https://goproxy.cn,https://goproxy.io,direct
+    '';
 
     subPackages = [ "." ];
 
