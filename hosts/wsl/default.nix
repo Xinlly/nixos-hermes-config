@@ -10,16 +10,16 @@ let
   # 首次构建时 hash 会报错，按报错提示替换下方的 fakeHash 值。
   lark_cli = pkgs.buildGoModule rec {
     pname = "lark-cli";
-    version = "1.0.43";
+    version = "1.0.85";
 
     src = pkgs.fetchFromGitHub {
       owner = "larksuite";
       repo = "cli";
       rev = "v${version}";
-      hash = "sha256-TextZLYbO9ZQksokOt0NHNmvPljd37H0d7k9nHV/KQQ=";
+      hash = lib.fakeHash;
     };
 
-    vendorHash = "sha256-M0/Y62Y+M/P1B/YIDjX5bEyB/GKihCWQakTWVd7zvBg=";
+    vendorHash = lib.fakeHash;
 
     subPackages = [ "." ];
 
