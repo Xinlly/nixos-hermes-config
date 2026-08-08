@@ -19,6 +19,8 @@
   nix.settings.substituters = [ "https://mirrors.tuna.tsinghua.edu.cn/nix-channels/store" ];
   nix.settings.trusted-substituters = [ "https://mirrors.tuna.tsinghua.edu.cn/nix-channels/store" ];
 
+  environment.systemPackages = with pkgs; [ nodejs_22 ];
+
   # 静态 IP — systemd.network 按驱动匹配（MAC 重装会变，驱动不变）
   networking.useDHCP = false;
   systemd.network.enable = true;

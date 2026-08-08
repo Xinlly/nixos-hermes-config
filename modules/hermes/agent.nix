@@ -113,6 +113,12 @@ in
           key_env = "POLOAPI_API_KEY";
           name = "PoloAPI";
         };
+        ark = {
+          base_url = "https://ark.cn-beijing.volces.com/api/coding";
+          key_env = "ARK_API_KEY";
+          name = "火山引擎 Ark";
+          transport = "anthropic_messages";
+        };
       };
 
       # 主模型备援 — 主模型失败时自动切换
@@ -181,7 +187,7 @@ in
       # Agent 行为
       agent = { max_turns = 90; };
       # 白名单工具组 — PoloAPI 限 128 tools，all=144，裁剪不必要组
-      toolsets = [ "terminal" "file" "skills" "web" "vision" "tts" "todo" "memory" "session_search" "cronjob" "computer_use" "clarify" "execute_code" "delegate_task" "image_generate" "close_terminal" "read_terminal" "feishu_doc_read" "feishu_drive_add_comment" "feishu_drive_list_comments" "feishu_drive_list_comment_replies" "feishu_drive_reply_comment" "project_create" "project_list" "project_switch" ];
+      toolsets = [ "terminal" "file" "skills" "vision" "tts" "todo" "memory" "session_search" "cronjob" "computer_use" "clarify" "execute_code" "delegate_task" "image_generate" "close_terminal" "read_terminal" "feishu_doc_read" "feishu_drive_add_comment" "feishu_drive_list_comments" "feishu_drive_list_comment_replies" "feishu_drive_reply_comment" "project_create" "project_list" "project_switch" ];
 
       # Superpowers workflow 暂停：保留文件备份，停止自动加载；改用 Matt Pocock skills 试运行。
       # 仅暴露 hermes/skills 适配层，不直接加载上游完整 skills/ 树。
