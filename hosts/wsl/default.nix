@@ -19,7 +19,7 @@ let
       hash = "sha256-NLSTxgIfHAzZ0PT2+zfKdOYSMFwmCWA26rQcD/WUnQ0=";
     };
 
-    vendorHash = "sha256-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=";
+    vendorHash = "sha256-WClES7ilNmQ0018Qf13tNHouE/SIwh99MaewZ7VGQ2E=";
 
     preBuild = ''
       export GOPROXY=https://goproxy.cn,https://goproxy.io,direct
