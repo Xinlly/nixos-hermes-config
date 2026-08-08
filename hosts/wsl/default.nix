@@ -16,10 +16,10 @@ let
       owner = "larksuite";
       repo = "cli";
       rev = "v${version}";
-      hash = lib.fakeHash;
+      hash = "sha256-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=";
     };
 
-    vendorHash = lib.fakeHash;
+    vendorHash = "sha256-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=";
 
     subPackages = [ "." ];
 
