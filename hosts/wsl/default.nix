@@ -19,7 +19,7 @@ let
       hash = "sha256-TextZLYbO9ZQksokOt0NHNmvPljd37H0d7k9nHV/KQQ=";
     };
 
-    vendorHash = "";  # use Go module proxy (faster than computing vendorHash)
+    vendorHash = "sha256-M0/Y62Y+M/P1B/YIDjX5bEyB/GKihCWQakTWVd7zvBg=";
 
     subPackages = [ "." ];
 

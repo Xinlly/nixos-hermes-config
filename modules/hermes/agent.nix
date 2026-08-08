@@ -137,14 +137,14 @@ in
           provider = "deepseek";
           model = "deepseek-v4-flash";
         };
-        # 轻量任务 — 全部用讯飞 DeepSeek V3.2
-        title_generation = { provider = "xfyun"; model = "xopdeepseekv32"; };
-        skills_hub        = { provider = "xfyun"; model = "xopdeepseekv32"; };
-        approval          = { provider = "xfyun"; model = "xopdeepseekv32"; };
-        mcp               = { provider = "xfyun"; model = "xopdeepseekv32"; };
-        tts_audio_tags    = { provider = "xfyun"; model = "xopglmv47flash"; };
-        profile_describer = { provider = "xfyun"; model = "xopdeepseekv32"; };
-        monitor           = { provider = "xfyun"; model = "xopdeepseekv32"; };
+        # 轻量任务
+        title_generation = { provider = "deepseek"; model = "deepseek-v4-flash"; };
+        skills_hub        = { provider = "deepseek"; model = "deepseek-v4-flash"; };
+        approval          = { provider = "deepseek"; model = "deepseek-v4-flash"; };
+        mcp               = { provider = "deepseek"; model = "deepseek-v4-flash"; };
+        tts_audio_tags    = { provider = "deepseek"; model = "deepseek-v4-flash"; };
+        profile_describer = { provider = "deepseek"; model = "deepseek-v4-flash"; };
+        monitor           = { provider = "deepseek"; model = "deepseek-v4-flash"; };
       };
 
       # 平台配置
