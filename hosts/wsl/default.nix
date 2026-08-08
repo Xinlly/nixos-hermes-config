@@ -8,7 +8,7 @@ let
   # ═══════════════════════════════════════════════════════════
   # nixpkgs 中尚无此包，参照 nixos-hermes 的 linear-cli 模式自行打包。
   # 首次构建时 hash 会报错，按报错提示替换下方的 fakeHash 值。
-  lark-cli = pkgs.buildGoModule rec {
+  lark_cli = pkgs.buildGoModule rec {
     pname = "lark-cli";
     version = "1.0.43";
 
@@ -77,7 +77,7 @@ in
   };
 
   # WSL2 独有工具（Node.js、GitHub CLI、飞书 CLI）
-  environment.systemPackages = with pkgs; [ nodejs_22 gh feishu-cli jq tcpdump openssl libreoffice poppler-utils ] ++ [ lark-cli ];
+  environment.systemPackages = with pkgs; [ nodejs_22 gh feishu-cli jq tcpdump openssl libreoffice poppler-utils ] ++ [ lark_cli ];
 
   # Mihomo 代理 — 极简 systemd 服务
   # 不用 nixpkgs services.mihomo，避免 PrivateUsers/DynamicUser 沙箱冲突
