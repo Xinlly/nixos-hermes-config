@@ -270,6 +270,7 @@ in
       HERMES_SEARCH_PROXY = "http://127.0.0.1:35353";
       AGENT_BROWSER_PROXY = "http://127.0.0.1:35353";
       AGENT_BROWSER_PROXY_BYPASS = "localhost,127.0.0.1";
+      DBUS_SESSION_BUS_ADDRESS = "unix:path=/tmp/dbus-session";  # soffice headless 绕过 /run/user/UID 权限
       AGENT_BROWSER_AUTO_CONNECT = "true";
     };
     # ── 机密环境变量（追加入 .env 第二部分）──
