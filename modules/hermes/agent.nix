@@ -231,11 +231,10 @@ in
             SIYUAN_TOKEN = "\${SIYUAN_TOKEN}";
           };
         };
-        # cua-driver disabled — PoloAPI 限 128 tools
-        # cua-driver = {
-        #   command = "/mnt/c/Users/Admin0/AppData/Local/Programs/Cua/cua-driver/bin/cua-driver.exe";
-        #   args = [ "mcp" ];
-        # };
+        cua-driver = {
+          command = "/mnt/c/Users/Admin0/AppData/Local/Programs/Cua/cua-driver/bin/cua-driver.exe";
+          args = [ "mcp" ];
+        };
       };
     };
 
@@ -272,6 +271,8 @@ in
       AGENT_BROWSER_PROXY_BYPASS = "localhost,127.0.0.1";
       DBUS_SESSION_BUS_ADDRESS = "unix:path=/tmp/dbus-session";  # soffice headless 绕过 /run/user/UID 权限
       AGENT_BROWSER_AUTO_CONNECT = "true";
+      # CUA driver — computer_use 工具调用宿主机 Windows 上的 cua-driver.exe
+      HERMES_CUA_DRIVER_CMD = "/mnt/c/Users/Admin0/AppData/Local/Programs/Cua/cua-driver/bin/cua-driver.exe";
     };
     # ── 机密环境变量（追加入 .env 第二部分）──
     environmentFiles = [ "/var/lib/hermes/.hermes/.env.secrets" ];
