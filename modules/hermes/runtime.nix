@@ -112,6 +112,25 @@ let
             _httpx.Client.__init__ = _patched_client_init
         except Exception:
             pass
+
+    # ⑧ computer_use — 修复 WSL 下 manifest 返回 Windows 路径覆盖 driver_cmd 的问题
+    #    当用户显式设置 HERMES_CUA_DRIVER_CMD 时，保留用户指定的二进制路径，
+    #    只采用 manifest 返回的 args。否则 manifest 返回的 C:\... 路径在
+    #    WSL 的 Python subprocess 中无法解析，导致 cua-driver 启动失败。
+    _cua_driver_cmd = _os.environ.get("HERMES_CUA_DRIVER_CMD", "")
+    if _cua_driver_cmd:
+        try:
+            from tools.computer_use import cua_backend as _cua_backend
+            _orig_resolve = _cua_backend._resolve_mcp_invocation
+
+            def _patched_resolve_mcp_invocation(driver_cmd, *, timeout=6.0):
+                _cmd, _args = _orig_resolve(driver_cmd, timeout=timeout)
+                # 用户显式指定了二进制路径 → 保留用户路径，只用 manifest 的 args
+                return driver_cmd, _args
+
+            _cua_backend._resolve_mcp_invocation = _patched_resolve_mcp_invocation
+        except Exception:
+            pass
   '';
 
   # ═══════════════════════════════════════════════

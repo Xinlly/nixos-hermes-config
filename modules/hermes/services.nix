@@ -17,6 +17,8 @@ in
     "PYTHONPATH=${cfg.pythonPath}"
     "LD_LIBRARY_PATH=${pkgs.libpulseaudio}/lib"   # PortAudio dlopen libpulse 需要
     "no_proxy=localhost,127.0.0.1,::1"
+    # computer_use 工具 — 指向宿主机 Windows 上的 cua-driver.exe
+    "HERMES_CUA_DRIVER_CMD=/mnt/c/Users/Admin0/AppData/Local/Programs/Cua/cua-driver/bin/cua-driver.exe"
   ];
 
   # ═══════════════════════════════════════════════
