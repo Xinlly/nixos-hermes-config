@@ -22,14 +22,15 @@ in
       approvals = { 
         mode = "smart";    # smart | manual | off — LLM 自动判断，不确定时弹确认
         timeout = 60;      # 等待用户响应的秒数
+        cron_mode = "smart";  # cron 任务审批模式（v0.19+）：smart | manual | deny | off
       };
       security = { redact_secrets = true; };
       privacy = { redact_pii = false; };
 
-      # 模型 — MiniMax M3 (国内版)
+      # 模型 — 火山引擎 Ark Code
       model = {
-        default = "MiniMax-M3";
-        provider = "minimax-cn";
+        default = "ark-code-latest";
+        provider = "ark";
       };
 
       # TTS — 自定义 MiMo 提供商（xiaomiTTS2OpenAITTSAPI 代理）
@@ -39,7 +40,8 @@ in
           mimo = {
             type = "command";
             command = "${pkgs.python3}/bin/python3 /var/lib/hermes/workspace/projects/our/xiaomiTTS2OpenAITTSAPI/hermes_mimo_tts_wrapper.py {input_path} {output_path}";
-            output_format = "mp3";
+            output_format = "opus";   # opus → 飞书原生语音消息（audio 类型）
+            voice_compatible = true;  # 告诉 Hermes 此 provider 支持语音气泡投递，自动做 container 修复/转码兜底
           };
         };
       };
@@ -94,11 +96,16 @@ in
         provider = "hindsight";
       };
 
-      # 上下文压缩（何时触发）
+      # 上下文压缩
       compression = {
         enabled = true;
-        threshold = 0.50;
+        threshold = 0.50;        # 上下文 50% 触发
         target_ratio = 0.20;
+        protect_last_n = 35;     # 保护最近 35 条消息
+        protect_first_n = 3;
+        tail_mode = "lean";      # v0.20 精简尾部模式
+        min_tail_user_messages = 5;
+        proactive_prune_tokens = 8000; # 主动裁剪 8k tokens 以上大工具输出
       };
 
       # 自定义提供商
@@ -123,8 +130,8 @@ in
 
       # 主模型备援 — 主模型失败时自动切换
       fallback_model = {
-        provider = "deepseek";
-        model = "deepseek-v4-pro";
+        provider = "minimax-cn";
+        model = "MiniMax-M3";
       };
 
       # 辅助任务模型配置
@@ -185,7 +192,7 @@ in
       };
 
       # Agent 行为
-      agent = { max_turns = 90; };
+      agent = { max_turns = 500; };
       # 白名单工具组 — PoloAPI 限 128 tools，all=144，裁剪不必要组
       toolsets = [ "web" "terminal" "file" "skills" "vision" "tts" "todo" "memory" "session_search" "cronjob" "computer_use" "clarify" "execute_code" "delegate_task" "image_generate" "close_terminal" "read_terminal" "feishu_doc_read" "feishu_drive_add_comment" "feishu_drive_list_comments" "feishu_drive_list_comment_replies" "feishu_drive_reply_comment" "project_create" "project_list" "project_switch" ];
 
