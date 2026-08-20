@@ -6,8 +6,9 @@
 let
   cfg = config.services.hermesRuntime;
 
-  # MiMo TTS 代理 Python 环境 — 含 fastapi/uvicorn/httpx/pydantic
-  ttsPython = pkgs.python3.withPackages (ps: with ps; [ fastapi uvicorn httpx python-dotenv pydantic ]);
+  # MiMo TTS 代理 Python 环境 — 含 fastapi/uvicorn/httpx/pydantic/pydub
+  # pydub + ffmpeg 用于 opus 转码（飞书语音消息要求 opus 格式）
+  ttsPython = pkgs.python3.withPackages (ps: with ps; [ fastapi uvicorn httpx python-dotenv pydantic pydub ]);
 in
 {
   # ═══════════════════════════════════════════════
@@ -34,6 +35,7 @@ in
       WorkingDirectory = "/var/lib/hermes/workspace/projects/our/xiaomiTTS2OpenAITTSAPI";
       ExecStart = "${ttsPython}/bin/python3 -m uvicorn main:app --host 127.0.0.1 --port 8080";
       EnvironmentFile = "/var/lib/hermes/.hermes/.env.secrets";
+      Path = [ "${pkgs.ffmpeg}/bin" ];  # pydub 转码需要 ffmpeg
       Restart = "always";
       RestartSec = 5;
     };

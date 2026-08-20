@@ -31,21 +31,21 @@ let
   };
 
   # ═══════════════════════════════════════════════
-  # sitecustomize.py — 七合一 Python 启动 shim
+  # sitecustomize.py — 四合一 Python 启动 shim
   # ═══════════════════════════════════════════════
   # ① PortAudio ctypes 劫持: NixOS CPython no-ldconfig 补丁导致
   #    ctypes.util.find_library("portaudio") 始终返回 None。
   #    直接返回 Nix store 中 libportaudio.so 路径。
   # ② libpulse 劫持: 同①，PortAudio PulseAudio 后端需要 libpulse.so。
   #    LD_LIBRARY_PATH 已在 serviceConfig 设好，此处再做 ctypes 兜底。
-  # ③ hermes_cli 源码扩展: v0.17.0 密封 venv 仅含 hermes_cli 顶层，
-  #    遗漏 proxy 等子模块。注入源码路径供 gateway 导入。
-  # ④ cron 源码扩展: gateway/run.py 导入 cron.scheduler，但 cron 未打包进密封 venv。
-  #    注入源码路径（与 ③ 同源的 hermes-agent flake input）。
-  # ⑤ 飞书卡片 gateway 覆盖: sealed venv site-packages 在 sys.path[1]，
-  #    PYTHONPATH 排在其后。从环境变量 HERMES_PATCHED_GATEWAY 读取路径，
-  #    注入 gateway.__path__[0]，确保补丁版 gateway/run.py 优先加载。
+  # ③ 源码扩展: v0.20 密封 venv 仅含 site-packages 中的 hermes_cli 等子模块，
+  #    遗漏 registration_lifecycle / run_agent / cli / toolsets 等顶层模块。
+  #    注入整个源码根目录，确保 hermes_cli.plugins 等 import 能找到顶层模块。
   # ⑦ web_search 代理注入 — 劫持 httpx，从 HERMES_SEARCH_PROXY 环境变量读取代理
+  #
+  # 已删除的历史 patch:
+  #   ⑤ 飞书卡片 gateway 覆盖 — 插件自己做 runtime monkey patching
+  #   ⑧ CUA WSL manifest 路径 — v0.20 上游原生支持 HERMES_CUA_DRIVER_CMD + WSL 路径转换
   shim = pkgs.writeTextDir "sitecustomize.py" ''
     import ctypes.util as _cu
     import os as _os
@@ -54,8 +54,7 @@ let
 
     _PORTAUDIO_PATH = "${portaudio}/lib/libportaudio.so"
     _PULSE_PATH = "${pkgs.libpulseaudio}/lib/libpulse.so"
-    _HERMES_CLI_SOURCE = "${inputs.hermes-agent}/hermes_cli"
-    _HERMES_CRON_SOURCE = "${inputs.hermes-agent}/cron"
+    _HERMES_SOURCE_ROOT = "${inputs.hermes-agent}"
     _orig_find_library = _cu.find_library
 
     def _patched_find_library(name, *args, **kwargs):
@@ -67,30 +66,11 @@ let
 
     _cu.find_library = _patched_find_library
 
-    try:
-        import hermes_cli as _hermes_cli
-        if hasattr(_hermes_cli, "__path__") and _HERMES_CLI_SOURCE not in _hermes_cli.__path__:
-            _hermes_cli.__path__.append(_HERMES_CLI_SOURCE)
-    except ImportError:
-        pass
-
-    try:
-        import cron as _hermes_cron
-        if hasattr(_hermes_cron, "__path__") and _HERMES_CRON_SOURCE not in _hermes_cron.__path__:
-            _hermes_cron.__path__.append(_HERMES_CRON_SOURCE)
-    except ImportError:
-        pass
-
-    # ⑤ 飞书卡片 gateway 覆盖
-    _pg = _os.environ.get("HERMES_PATCHED_GATEWAY", "")
-    if _pg:
-        try:
-            import gateway as _gw
-            _patched = _pg + "/gateway"
-            if _patched not in _gw.__path__:
-                _gw.__path__.insert(0, _patched)
-        except Exception:
-            pass
+    # ③ 源码扩展 — 把 hermes-agent 源码根目录插入 sys.path 最前面，
+    #    让密封 venv 找不到的顶层模块（registration_lifecycle / run_agent /
+    #    cli / toolsets / model_tools 等）能从源码直接导入。
+    if _HERMES_SOURCE_ROOT not in _sys.path:
+        _sys.path.insert(0, _HERMES_SOURCE_ROOT)
 
     # ⑦ web_search 代理注入 — 劫持 httpx，从 HERMES_SEARCH_PROXY 环境变量读取代理
     _search_proxy = _os.environ.get("HERMES_SEARCH_PROXY", "")
@@ -110,25 +90,6 @@ let
 
             _httpx.AsyncClient.__init__ = _patched_async_init
             _httpx.Client.__init__ = _patched_client_init
-        except Exception:
-            pass
-
-    # ⑧ computer_use — 修复 WSL 下 manifest 返回 Windows 路径覆盖 driver_cmd 的问题
-    #    当用户显式设置 HERMES_CUA_DRIVER_CMD 时，保留用户指定的二进制路径，
-    #    只采用 manifest 返回的 args。否则 manifest 返回的 C:\... 路径在
-    #    WSL 的 Python subprocess 中无法解析，导致 cua-driver 启动失败。
-    _cua_driver_cmd = _os.environ.get("HERMES_CUA_DRIVER_CMD", "")
-    if _cua_driver_cmd:
-        try:
-            from tools.computer_use import cua_backend as _cua_backend
-            _orig_resolve = _cua_backend._resolve_mcp_invocation
-
-            def _patched_resolve_mcp_invocation(driver_cmd, *, timeout=6.0):
-                _cmd, _args = _orig_resolve(driver_cmd, timeout=timeout)
-                # 用户显式指定了二进制路径 → 保留用户路径，只用 manifest 的 args
-                return driver_cmd, _args
-
-            _cua_backend._resolve_mcp_invocation = _patched_resolve_mcp_invocation
         except Exception:
             pass
   '';
