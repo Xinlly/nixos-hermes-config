@@ -92,24 +92,6 @@ let
             _httpx.Client.__init__ = _patched_client_init
         except Exception:
             pass
-
-    # ⑨ 调试日志级别 — 从 HERMES_DEBUG_LOGGERS 环境变量读取逗号分隔的 logger:level 对
-    #    例: HERMES_DEBUG_LOGGERS=hermes_lark_streaming:DEBUG,hermes.gateway:DEBUG
-    _debug_loggers = _os.environ.get("HERMES_DEBUG_LOGGERS", "")
-    if _debug_loggers:
-        try:
-            import logging as _logging
-            for _pair in _debug_loggers.split(","):
-                _pair = _pair.strip()
-                if ":" in _pair:
-                    _name, _level = _pair.split(":", 1)
-                    _level = _level.upper()
-                    if hasattr(_logging, _level):
-                        _logging.getLogger(_name).setLevel(getattr(_logging, _level))
-                elif _pair:
-                    _logging.getLogger(_pair).setLevel(_logging.DEBUG)
-        except Exception:
-            pass
   '';
 
   # ═══════════════════════════════════════════════

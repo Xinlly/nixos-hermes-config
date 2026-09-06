@@ -32,7 +32,6 @@ in
     settings.plugins.enabled = [
       "hermes-lark-streaming"
       "matt-workflows"
-      "hermes-knowledge-curator"
     ];
   };
 }

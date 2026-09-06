@@ -27,6 +27,11 @@ in
       security = { redact_secrets = true; };
       privacy = { redact_pii = false; };
 
+      # 日志级别（DEBUG 用于排查流式卡片截断问题，用完改回 INFO）
+      logging = {
+        level = "DEBUG";
+      };
+
       # 模型 — 火山引擎 Ark Code
       model = {
         default = "ark-code-latest";
@@ -280,8 +285,6 @@ in
       AGENT_BROWSER_AUTO_CONNECT = "true";
       # CUA driver — computer_use 工具调用宿主机 Windows 上的 cua-driver.exe
       HERMES_CUA_DRIVER_CMD = "/mnt/c/Users/Admin0/AppData/Local/Programs/Cua/cua-driver/bin/cua-driver.exe";
-      # 调试：为指定 logger 开 DEBUG 级别（逗号分隔，格式 logger:level）
-      HERMES_DEBUG_LOGGERS = "hermes_lark_streaming:DEBUG";
     };
     # ── 机密环境变量（追加入 .env 第二部分）──
     environmentFiles = [ "/var/lib/hermes/.hermes/.env.secrets" ];
