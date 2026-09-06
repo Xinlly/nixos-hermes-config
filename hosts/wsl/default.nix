@@ -133,8 +133,9 @@ in
   # WSL2 独有工具（Node.js、GitHub CLI、飞书 CLI）
   environment.systemPackages = with pkgs; [ nodejs_22 gh feishu-cli jq tcpdump openssl libreoffice poppler-utils ] ++ [ lark_cli kdocs_cli ];
 
-  # Windows 工具路径 — 让 PowerShell 等 Windows 程序可直接调用
+  # Windows 工具路径 — 便于从 WSL 调用 Windows 程序
   environment.extraInit = ''
+    export PATH="$PATH:/mnt/c/Windows/System32"
     export PATH="$PATH:/mnt/c/Windows/System32/WindowsPowerShell/v1.0"
   '';
 
