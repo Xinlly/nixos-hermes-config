@@ -95,10 +95,10 @@ let
   '';
 
   # ═══════════════════════════════════════════════
-  # CLI wrapper — hermes-w 命令
+  # CLI wrapper — hermes-u 命令
   # ═══════════════════════════════════════════════
   # 自动: cd workspace → sudo -u hermes → 注入 PYTHONPATH → 运行 hermes
-  hermesWrapper = pkgs.writeShellScriptBin "hermes-w" ''
+  hermesUWrapper = pkgs.writeShellScriptBin "hermes-u" ''
     set -e
     export PYTHONPATH="${shim}"
     cd /var/lib/hermes/workspace || true
@@ -130,23 +130,23 @@ in
   options.services.hermesRuntime = {
     portaudio = lib.mkOption { type = lib.types.package; internal = true; };
     shim = lib.mkOption { type = lib.types.package; internal = true; };
-    hermesWrapper = lib.mkOption { type = lib.types.package; internal = true; };
+    hermesUWrapper = lib.mkOption { type = lib.types.package; internal = true; };
     pythonPath = lib.mkOption { type = lib.types.str; internal = true; };
   };
 
   config = {
     services.hermesRuntime = {
-      inherit portaudio shim hermesWrapper pythonPath;
+      inherit portaudio shim hermesUWrapper pythonPath;
     };
 
-    # hermes-w 加入系统 PATH
-    environment.systemPackages = [ hermesWrapper ];
+    # hermes-u 加入系统 PATH
+    environment.systemPackages = [ hermesUWrapper ];
 
-    # sudoers: xavier 免密以 hermes 身份执行 hermes-w
+    # sudoers: xavier 免密以 hermes 身份执行 hermes-u
     security.sudo.extraRules = [{
       users = [ "xavier" ];
       commands = [{
-        command = "${hermesWrapper}/bin/hermes-w";
+        command = "${hermesUWrapper}/bin/hermes-u";
         options = [ "NOPASSWD" ];
       }];
       runAs = "hermes";
