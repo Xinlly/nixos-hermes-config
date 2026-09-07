@@ -32,10 +32,36 @@ in
         level = "DEBUG";
       };
 
-      # 模型 — 火山引擎 Ark Code
+      # 主模型
       model = {
-        default = "ark-code-latest";
+        default = "MiniMax-M3";
+        provider = "minimax-cn";
+      };
+
+      # 主模型备援 — 主模型失败时自动切换
+      fallback_model = {
+        model = "ark-code-latest";
         provider = "ark";
+      };
+
+      # 辅助任务模型配置
+      auxiliary = {
+        vision = {
+          provider = "minimax-cn";
+          model = "MiniMax-M3";
+        };
+        compression = {
+          provider = "deepseek";
+          model = "deepseek-v4-flash";
+        };
+        # 轻量任务
+        title_generation = { provider = "deepseek"; model = "deepseek-v4-flash"; };
+        skills_hub        = { provider = "deepseek"; model = "deepseek-v4-flash"; };
+        approval          = { provider = "deepseek"; model = "deepseek-v4-flash"; };
+        mcp               = { provider = "deepseek"; model = "deepseek-v4-flash"; };
+        tts_audio_tags    = { provider = "deepseek"; model = "deepseek-v4-flash"; };
+        profile_describer = { provider = "deepseek"; model = "deepseek-v4-flash"; };
+        monitor           = { provider = "deepseek"; model = "deepseek-v4-flash"; };
       };
 
       # TTS — 自定义 MiMo 提供商（xiaomiTTS2OpenAITTSAPI 代理）
@@ -131,32 +157,6 @@ in
           name = "火山引擎 Ark";
           transport = "anthropic_messages";
         };
-      };
-
-      # 主模型备援 — 主模型失败时自动切换
-      fallback_model = {
-        provider = "minimax-cn";
-        model = "MiniMax-M3";
-      };
-
-      # 辅助任务模型配置
-      auxiliary = {
-        vision = {
-          provider = "minimax-cn";
-          model = "MiniMax-M3";
-        };
-        compression = {
-          provider = "deepseek";
-          model = "deepseek-v4-flash";
-        };
-        # 轻量任务
-        title_generation = { provider = "deepseek"; model = "deepseek-v4-flash"; };
-        skills_hub        = { provider = "deepseek"; model = "deepseek-v4-flash"; };
-        approval          = { provider = "deepseek"; model = "deepseek-v4-flash"; };
-        mcp               = { provider = "deepseek"; model = "deepseek-v4-flash"; };
-        tts_audio_tags    = { provider = "deepseek"; model = "deepseek-v4-flash"; };
-        profile_describer = { provider = "deepseek"; model = "deepseek-v4-flash"; };
-        monitor           = { provider = "deepseek"; model = "deepseek-v4-flash"; };
       };
 
       # 平台配置
