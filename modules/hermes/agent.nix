@@ -34,14 +34,14 @@ in
 
       # 主模型
       model = {
-        default = "MiniMax-M3";
-        provider = "minimax-cn";
+        default = "ark-code-latest";
+        provider = "ark";
       };
 
       # 主模型备援 — 主模型失败时自动切换
       fallback_model = {
-        model = "ark-code-latest";
-        provider = "ark";
+        model = "MiniMax-M3";
+        provider = "minimax-cn";
       };
 
       # 辅助任务模型配置

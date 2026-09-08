@@ -109,6 +109,25 @@ let
     exec hermes "$@"
   '';
 
+  # ═══════════════════════════════════════════════
+  # hermes 命令包装 — sitecustomize 内置到裸 hermes
+  # ═══════════════════════════════════════════════
+  # 问题: 裸 hermes 启动 Python 时 sys.path 缺源码根目录，
+  #   `hermes_cli/plugins.py:62` 的 `from registration_lifecycle import ...` 报 ModuleNotFoundError。
+  # 解决: 用 makeWrapper 把 shim (含 sitecustomize.py 的目录) prepend 进 hermes 二进制的 PYTHONPATH，
+  #   让裸 hermes / hermes-acp / hermes-agent 任何模式自动有 sitecustomize。
+  # 注: hermes 入口脚本的最后一行是 `exec .../hermes-agent-env/bin/hermes "$@"`，shell 环境继承生效。
+  hermesAgentPkg = inputs.hermes-agent.packages.${pkgs.stdenv.hostPlatform.system}.default;
+  hermesWithShim = pkgs.runCommand "hermes-agent-with-shim" {
+    nativeBuildInputs = [ pkgs.makeWrapper ];
+  } ''
+    mkdir -p $out/bin
+    for bin in hermes hermes-acp hermes-agent; do
+      makeWrapper ${hermesAgentPkg}/bin/$bin $out/bin/$bin \
+        --prefix PYTHONPATH : "${shim}"
+    done
+  '';
+
   # pymupdf + 其传递依赖（含 mupdf Python 绑定和原生 .so）
   # requiredPythonModules 展开传递依赖，makeSearchPath 构建完整 PYTHONPATH
   pymupdfDeps = pkgs.python312.pkgs.requiredPythonModules [ pkgs.python312Packages.pymupdf pkgs.python312Packages.pymupdf4llm ];
@@ -131,16 +150,19 @@ in
     portaudio = lib.mkOption { type = lib.types.package; internal = true; };
     shim = lib.mkOption { type = lib.types.package; internal = true; };
     hermesUWrapper = lib.mkOption { type = lib.types.package; internal = true; };
+    hermesWithShim = lib.mkOption { type = lib.types.package; internal = true; };
     pythonPath = lib.mkOption { type = lib.types.str; internal = true; };
   };
 
   config = {
     services.hermesRuntime = {
-      inherit portaudio shim hermesUWrapper pythonPath;
+      inherit portaudio shim hermesUWrapper hermesWithShim pythonPath;
     };
 
     # hermes-u 加入系统 PATH
-    environment.systemPackages = [ hermesUWrapper ];
+    # hermesWithShim 用 mkBefore 排在 systemPackages 前面，
+    # 确保裸 hermes 命令走 wrapper（自动注入 sitecustomize）
+    environment.systemPackages = lib.mkBefore [ hermesUWrapper hermesWithShim ];
 
     # sudoers: xavier 免密以 hermes 身份执行 hermes-u
     security.sudo.extraRules = [{
