@@ -293,4 +293,11 @@ in
     # ── 机密环境变量（追加入 .env 第二部分）──
     environmentFiles = [ "/var/lib/hermes/.hermes/.env.secrets" ];
   };
+
+  # gateway 在 ProtectSystem=strict 的私有挂载命名空间内运行，默认仅 stateDir/workingDirectory 可写。
+  # 追加 Windows 项目目录，使飞书侧 hermes（hermes 用户）能与 Zed ACP（xavier 用户）
+  # 读写同一份 D:\Users\Admin0\source\repos 下的项目文件（list 选项，与上游两条 ReadWritePaths 合并）。
+  systemd.services.hermes-agent.serviceConfig.ReadWritePaths = [
+    "/mnt/d/Users/Admin0/source/repos"
+  ];
 }

@@ -28,8 +28,13 @@
     ];
   };
 
-  # Hermes Agent 运行账户已由 hermes-agent 模块定义，此处不需重复
-  # 如需自定义 hermes 用户属性（如追加组），在 hermes.nix 中声明
+  # Hermes Agent 运行账户由 hermes-agent 模块定义，此处仅追加自定义属性。
+  # linger=true：常驻 user manager + D-Bus 用户总线。
+  # 修复 switch-to-configuration 0.1.0 对“active 登录会话但无 user bus”的 hermes
+  # 报 Failed to open dbus connection（rebuild 退出码 4）。约 9MB 常驻，不拉起其他用户级单元。
+  users.users.hermes = {
+    linger = true;
+  };
 
   # Hermes Agent 内部 sudo 权限（podman 相关，免密）
   security.sudo.extraRules = [
