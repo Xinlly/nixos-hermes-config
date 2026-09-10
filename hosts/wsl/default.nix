@@ -89,6 +89,7 @@ in
   imports = [
     ../../common/base.nix
     ../../common/proxy.nix
+    ../../modules/paseo.nix
     ./users.nix
     ./hermes.nix
   ];
