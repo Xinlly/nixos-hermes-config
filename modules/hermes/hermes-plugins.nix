@@ -29,9 +29,17 @@ in
       mattWorkflows
     ];
 
-    settings.plugins.enabled = [
-      "hermes-lark-streaming"
-      "matt-workflows"
-    ];
+    settings.plugins = {
+      enabled = [
+        "hermes-lark-streaming"
+        "matt-workflows"
+      ];
+      # lark-streaming 启用（飞书流式卡片，gateway 用）；仅保持 curator 禁用。
+      # 注意：该插件 v1.5.0 无 ACP 模式门控，hermes 身份的 ACP（Zed“哆啦”）加载可能卡死，
+      # 按既定决策暂不处理，若复现再改其启动方式。
+      disabled = [
+        "hermes-knowledge-curator"
+      ];
+    };
   };
 }
