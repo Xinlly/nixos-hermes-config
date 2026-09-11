@@ -18,6 +18,10 @@
     group = "hermes";
     dataDir = "/var/lib/hermes/.paseo";
 
+    # 监听地址：module 用它生成 PASEO_LISTEN 环境变量，优先级高于 settings 里的
+    # daemon.listen。要对所有网卡开放必须改这里，仅改 settings 不生效。
+    listenAddress = "0.0.0.0";
+
     # 让 daemon spawn 的 agent 能找到用户 profile / 系统 PATH 中的 git、ssh、hermes
     inheritUserEnvironment = true;
 
@@ -31,7 +35,7 @@
     settings = {
       version = 1;
       daemon = {
-        listen = "0.0.0.0:6767";
+        # listen 由顶层 listenAddress 经 PASEO_LISTEN 环境变量控制，此处不写
         cors.allowedOrigins = [ "https://app.paseo.sh" ];
         relay.enabled = true;
       };
