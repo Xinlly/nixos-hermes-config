@@ -31,7 +31,7 @@
     settings = {
       version = 1;
       daemon = {
-        listen = "127.0.0.1:6767";
+        listen = "0.0.0.0:6767";
         cors.allowedOrigins = [ "https://app.paseo.sh" ];
         relay.enabled = true;
       };
@@ -39,8 +39,8 @@
 
       agents.providers.hermes = {
         extends = "acp";
-        label = "Hermes";
-        description = "Nous Research self-improving AI agent";
+        label = "哆啦";
+        description = "哆啦是一个多功能的 AI 助手，能够处理各种任务和请求。";
         # 用系统 PATH 中带 shim 的 hermes wrapper（注入 PYTHONPATH）
         command = [ "/run/current-system/sw/bin/hermes" "acp" ];
         # 显式钉死真实 HOME；overlay 合并到完整环境，PATH 等照常继承
