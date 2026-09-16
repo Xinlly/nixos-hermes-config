@@ -239,6 +239,9 @@ in
         electerm = {
           url = "http://127.0.0.1:30837/mcp";
         };
+        paseo = {
+          url = "http://127.0.0.1:6767/mcp/agents?callerAgentId=\${PASEO_AGENT_ID}";
+        };
         siyuan_sisyphus = {
           command = "${pkgs.nodejs_22}/bin/node";
           args = [ "/mnt/d/Users/Admin0/SiYuan/data/plugins/siyuan-plugins-mcp-sisyphus/mcp-server.cjs" ];
