@@ -31,6 +31,27 @@ let
   };
 
   # ═══════════════════════════════════════════════
+  # hermes-agent 源码根（本地 backport）
+  # ═══════════════════════════════════════════════
+  # 修复 ACP turn 后处理对 final_response=None 调用 .startswith 的崩溃：
+  # 当 key 存在但值为 None（turn 被中断且无 partial / 截断重试耗尽）时，
+  # result.get("final_response", "") 仍返回 None，server.py 对其 .startswith
+  # 抛 'NoneType' ... 'startswith'（JSON-RPC -32603）；该段在 executor 的 try
+  # 之外，异常跳过 is_running 复位，会话永久假-idle 不消费队列。
+  # 最小修复 result.get("final_response") or ""。基于精确 tag v2026.8.13，
+  # 上游 main 至今未修，故本地 backport，只移这一个修复，不整体升版本。
+  # 命中点：下方 shim 把该源码根插到 sys.path[0]，生产运行时 acp_adapter
+  # 从这里加载（遮蔽 sealed env 内同名副本，已实测 __file__ 指向 -source 根），
+  # 因此 patch 源码根即修复生产路径，无需重打密封 venv。
+  hermesAgentSource = pkgs.runCommand "hermes-agent-source-patched" {
+    nativeBuildInputs = [ pkgs.buildPackages.patch ];
+  } ''
+    cp -r ${inputs.hermes-agent} $out
+    chmod -R u+w $out
+    patch -d $out -p1 < ${../../patches/hermes-agent/0001-acp-fix-none-final-response.patch}
+  '';
+
+  # ═══════════════════════════════════════════════
   # sitecustomize.py — 四合一 Python 启动 shim
   # ═══════════════════════════════════════════════
   # ① PortAudio ctypes 劫持: NixOS CPython no-ldconfig 补丁导致
@@ -54,7 +75,7 @@ let
 
     _PORTAUDIO_PATH = "${portaudio}/lib/libportaudio.so"
     _PULSE_PATH = "${pkgs.libpulseaudio}/lib/libpulse.so"
-    _HERMES_SOURCE_ROOT = "${inputs.hermes-agent}"
+    _HERMES_SOURCE_ROOT = "${hermesAgentSource}"
     _orig_find_library = _cu.find_library
 
     def _patched_find_library(name, *args, **kwargs):
