@@ -12,9 +12,9 @@
     environmentFiles = [ "/var/lib/hermes/.hermes/hindsight/.env" ];
     extraOptions = [ "--network=host" ];
     environment = {
-      HINDSIGHT_API_LLM_PROVIDER = "deepseek";
-      HINDSIGHT_API_LLM_BASE_URL = "https://api.deepseek.com";
-      HINDSIGHT_API_LLM_MODEL = "deepseek-v4-flash";
+      HINDSIGHT_API_LLM_PROVIDER = "minimax";
+      HINDSIGHT_API_LLM_BASE_URL = "https://api.minimax.cn/v1";
+      HINDSIGHT_API_LLM_MODEL = "MiniMax-M3";
       HINDSIGHT_API_EMBEDDINGS_PROVIDER = "local";
       HINDSIGHT_API_EMBEDDINGS_LOCAL_MODEL = "all-MiniLM-L6-v2";
       HINDSIGHT_API_WORKER_ID = "hindsight-prod";
