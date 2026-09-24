@@ -38,7 +38,7 @@ nixos/
 |---|---|---|---|
 | `nixos` | WSL2 工作站 | NixOS-WSL | 全功能：Hermes + Paseo + 音频 + 浏览器 |
 | `raiyun` | 雨云 VPS（公网地址/端口不入库） | BIOS+GPT(EF02)，disko | 最小 NixOS + Tailscale/DERP + mihomo |
-| `raiyun2` | 新机雨云高速线（公网地址/端口不入库） | BIOS+GPT(EF02)，disko | **已装 NixOS 26.11**：最小 NixOS + SSH（无 derper/mihomo），过程见下 |
+| `raiyun2` | 新机雨云高速线（公网地址/端口不入库） | BIOS+GPT(EF02)，disko | **raiyun 完整镜像**：Tailscale/DERP/nginx/mihomo，运行时文件已同步（DNS 策略用户维护） |
 
 新增主机 = 在 `hosts/<name>/` 加目录 + flake.nix 注册一个 `nixosConfigurations.<name>`。
 

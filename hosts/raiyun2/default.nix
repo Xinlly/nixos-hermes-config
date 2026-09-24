@@ -1,23 +1,28 @@
-# hosts/raiyun2/default.nix — 新机 rainyun2（雨云高速线路）
-# 目标：最小 NixOS + SSH。暂不含 Tailscale/DERP/mihomo。
-# KVM 部署：GPT + disko，网络按 virtio 驱动匹配
+# hosts/raiyun2/default.nix — 新机 rainyun2（完整复制自 raiyun）
+# KVM 部署：GPT + disko 分区，按 virtio 驱动匹配网络
+# 差异（相对 raiyun）：hostname=raiyun2、IP 172.16.71.87、磁盘 /dev/sda
 { config, lib, pkgs, modulesPath, ... }:
 {
   imports = [
     ../../common/base.nix
+    ../../common/proxy.nix
+    ../../modules/tailscale.nix
     ./disk-config.nix
-    (modulesPath + "/profiles/qemu-guest.nix")  # virtio 驱动（网络/磁盘/balloon）
+    ./derper.nix
+    (modulesPath + "/profiles/qemu-guest.nix")  # virtio 驱动（磁盘/网络/balloon）
   ];
 
   # ══ 主机身份 ══
   networking.hostName = "raiyun2";
   system.stateVersion = "26.05";
 
-  # nix 源用清华镜像
+  # nix 源用清华镜像（安装后 rebuild 可改为直连或代理）
   nix.settings.substituters = [ "https://mirrors.tuna.tsinghua.edu.cn/nix-channels/store" ];
   nix.settings.trusted-substituters = [ "https://mirrors.tuna.tsinghua.edu.cn/nix-channels/store" ];
 
-  # 静态 IP — systemd.network 按驱动匹配（MAC 会变，virtio_net 驱动不变）
+  environment.systemPackages = with pkgs; [ nodejs_22 ];
+
+  # 静态 IP — systemd.network 按驱动匹配（MAC 重装会变，驱动不变）
   networking.useDHCP = false;
   systemd.network.enable = true;
   systemd.network.networks."10-wan" = {
@@ -48,5 +53,25 @@
   # SSH 公钥认证（免密码登录）
   users.users.root.openssh.authorizedKeys.keys = [
     "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIM/bIU/pfKrNm20nW3pjzEsBqlK9XOWdaia6gCPVt3oe raiyun-nixos"
+    "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIJhH/o5wf7MrCd398BY/oKqYxQk63iOFxlidKaef1ZZk"
   ];
+
+  # Mihomo 代理 — 二进制来自 nixpkgs，配置手动上传
+  # 首次启动后：SFTP 传 config.yaml + geodata 到 /opt/mihomo/，然后 systemctl restart mihomo
+  # 重启上限：5 分钟内最多 3 次，避免缺配置时无限重试
+  systemd.tmpfiles.rules = [ "d /opt/mihomo 0755 root root -" ];
+  systemd.services.mihomo = {
+    description = "Mihomo Proxy";
+    after = [ "network.target" ];
+    wantedBy = [ "multi-user.target" ];
+    startLimitBurst = 3;
+    startLimitIntervalSec = 300;
+    serviceConfig = {
+      User = "root";
+      WorkingDirectory = "/opt/mihomo";
+      ExecStart = "${pkgs.mihomo}/bin/mihomo -d /opt/mihomo -f /opt/mihomo/config.yaml";
+      Restart = "on-failure";
+      RestartSec = 10;
+    };
+  };
 }
