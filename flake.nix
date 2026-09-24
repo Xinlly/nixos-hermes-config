@@ -54,6 +54,16 @@
       ];
     };
 
+    # ── 变体：新机 rainyun2（最小 NixOS + SSH）──
+    nixosConfigurations.raiyun2 = nixpkgs.lib.nixosSystem {
+      system = "x86_64-linux";
+      specialArgs = { inherit inputs; };
+      modules = [
+        disko.nixosModules.disko
+        ./hosts/raiyun2/default.nix
+      ];
+    };
+
     packages.x86_64-linux.nixos-anywhere = nixos-anywhere.packages.x86_64-linux.default;
   };
 }
