@@ -37,8 +37,8 @@ nixos/
 | Attr | 机器 | 引导 | 说明 |
 |---|---|---|---|
 | `nixos` | WSL2 工作站 | NixOS-WSL | 全功能：Hermes + Paseo + 音频 + 浏览器 |
-| `raiyun` | 雨云 VPS（公网地址不入库） | BIOS+GPT(EF02)，disko | 最小 NixOS + Tailscale/DERP + mihomo |
-| `raiyun2` | 新机雨云高速线（公网地址不入库） | BIOS+GPT(EF02)，disko | **已装 NixOS 26.11**：最小 NixOS + SSH（无 derper/mihomo），过程见下 |
+| `raiyun` | 雨云 VPS（公网地址/端口不入库） | BIOS+GPT(EF02)，disko | 最小 NixOS + Tailscale/DERP + mihomo |
+| `raiyun2` | 新机雨云高速线（公网地址/端口不入库） | BIOS+GPT(EF02)，disko | **已装 NixOS 26.11**：最小 NixOS + SSH（无 derper/mihomo），过程见下 |
 
 新增主机 = 在 `hosts/<name>/` 加目录 + flake.nix 注册一个 `nixosConfigurations.<name>`。
 
@@ -105,7 +105,7 @@ nixos/
 **与 raiyun 的配置差异**（落在 `hosts/raiyun2/`）：
 1. `networking.hostName = "raiyun2"`，flake attr=`raiyun2`。
 2. disko 设备 `/dev/sda`（新机 SCSI `sd` 总线；raiyun 是 virtio `/dev/vda`）。
-3. 静态 IP `172.16.71.87`（接口 ens18，仍 virtio_net，按 Driver 匹配）。
+3. 静态内网 IP / 接口见 `hosts/raiyun2/default.nix`（virtio_net，按 Driver 匹配；公网经雨云 NAT）。
 4. `qemu-guest.nix` 保留；GRUB BIOS/i386-pc 写 /dev/sda。
 
 **执行步骤**：
@@ -113,7 +113,7 @@ nixos/
 2. 部署 SSH 公钥到 `/root/.ssh/authorized_keys`（600），修复本地私钥权限为 600，本地私钥免密登录验证通过（kexec 前置，见 safe-ops）。
 3. 本地 `nix build` toplevel 与 diskoScript，`nix build` nixos-anywhere（1.13.0）。
 4. 本地经代理 35353 下载 kexec tarball（439MB），gzip 校验，`--kexec` 传本地路径（避免目标机直连 GitHub）。
-5. `nixos-anywhere -s <disko可执行脚本> <toplevel> --kexec <本地tar> -i <key> -p 外部SSH口不入库 --post-kexec-ssh-port 外部SSH口不入库`。
+5. `nixos-anywhere -s <disko可执行脚本> <toplevel> --kexec <本地tar> -i <key> -p <外部SSH口> --post-kexec-ssh-port <外部SSH口>`。
 6. 自动完成：kexec → disko 擦盘分区 → 安装 NixOS + GRUB → 重启。日志 `/tmp/r2-install.log` 结尾 `### Done! ###`，进程 exit 0。
 7. 重启后清旧 host key，SSH 免密登录验证：NixOS 26.11 / kernel 6.18.35 / hostname raiyun2 / sda2 挂 / / sshd active+enabled / firewall active / 出网+DNS 正常。
 
