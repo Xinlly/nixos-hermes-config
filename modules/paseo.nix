@@ -38,17 +38,34 @@
         # listen 由顶层 listenAddress 经 PASEO_LISTEN 环境变量控制，此处不写
         cors.allowedOrigins = [ "https://app.paseo.sh" ];
         relay.enabled = true;
+
+        # Inject the Paseo MCP server into spawned agents (was lost on 09-26 re-render)
+        mcp.injectIntoAgents = true;
+        browserTools.enabled = true;
+
+        # Universal red lines, auto-appended to every agent's system prompt.
+        # This is the ONLY reliable auto-injection channel (skills need skill_view).
+        # Re-authored 2026-09-26 after the original literal was wiped (same 3 rules).
+        appendSystemPrompt = ''
+          1. Identity anchor: your role and project are the Paseo registration labels (role / project) and your parent chain (label paseo.parent-agent-id), assigned at creation. Do not investigate or re-assign your own identity; no identity archaeology.
+          2. Sole delegation channel: spawn sub-work only via Paseo create_agent (or the Paseo CLI). Never use Hermes delegate_task inside a Paseo project.
+          3. Stay in role: orchestrators/planners dispatch and coordinate; never personally perform product work (no product code edits, no builds beyond the orchestrator Gate).
+        '';
       };
       app.baseUrl = "https://app.paseo.sh";
 
-      agents.providers.hermes = {
-        extends = "acp";
-        label = "哆啦";
-        description = "哆啦是一个多功能的 AI 助手，能够处理各种任务和请求。";
-        # 用系统 PATH 中带 shim 的 hermes wrapper（注入 PYTHONPATH）
-        command = [ "/run/current-system/sw/bin/hermes" "acp" ];
-        # 显式钉死真实 HOME；overlay 合并到完整环境，PATH 等照常继承
-        env.HOME = "/var/lib/hermes";
+      agents = {
+        skills.selection.mode = "all";
+
+        providers.hermes = {
+          extends = "acp";
+          label = "哆啦";
+          description = "哆啦是一个多功能的 AI 助手，能够处理各种任务和请求。";
+          # 用系统 PATH 中带 shim 的 hermes wrapper（注入 PYTHONPATH）
+          command = [ "/run/current-system/sw/bin/hermes" "acp" ];
+          # 显式钉死真实 HOME；overlay 合并到完整环境，PATH 等照常继承
+          env.HOME = "/var/lib/hermes";
+        };
       };
     };
   };
