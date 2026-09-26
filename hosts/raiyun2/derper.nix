@@ -8,7 +8,7 @@ in
 {
   services.tailscale.derper = {
     enable = true;
-    domain = "derp.cn.xinlly.top";
+    domain = "derp.ry.xinlly.top";
     port = 8010;              # DERP 内部端口，nginx 反代到它
     stunPort = 3478;          # 映射自公网 53478
     configureNginx = false;    # 禁用内置 nginx/Let's Encrypt（无公网 80/443）
@@ -27,8 +27,8 @@ in
   services.nginx = {
     enable = true;
 
-    # DERP — derp.cn.xinlly.top
-    virtualHosts."derp.cn.xinlly.top" = {
+    # DERP — derp.ry.xinlly.top
+    virtualHosts."derp.ry.xinlly.top" = {
       onlySSL = true;
       listen = [{ port = 443; addr = "0.0.0.0"; ssl = true; }];
       sslCertificate = "${certPath}/fullchain.pem";
