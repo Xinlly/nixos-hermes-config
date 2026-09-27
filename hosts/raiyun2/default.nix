@@ -9,6 +9,7 @@
     ../../modules/tailscale.nix
     ./disk-config.nix
     ./derper.nix
+    ./easytier.nix
     (modulesPath + "/profiles/qemu-guest.nix")  # virtio 驱动（磁盘/网络/balloon）
   ];
 
