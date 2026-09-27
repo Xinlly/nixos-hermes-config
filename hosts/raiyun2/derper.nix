@@ -15,7 +15,7 @@ in
     openFirewall = true;
   };
 
-  networking.firewall.allowedTCPPorts = [ 443 ];
+  networking.firewall.allowedTCPPorts = [ 443 8010 ];
 
   # tailscaled 走代理连协调服务器
   systemd.services.tailscaled.serviceConfig.Environment = [
@@ -24,8 +24,23 @@ in
     "ALL_PROXY=socks5://127.0.0.1:35353"
   ];
 
+  # derper 直跑 TLS（自签 IP 证书，不发 SNI），外部经 NAT 58010→8010 直连。
+  # 覆盖 nixpkgs 默认 ExecStart：-certmode manual + hostname=IP 自动自签；
+  # -http-port=-1 关闭默认 80 明文监听（DynamicUser 无 CAP_NET_BIND_SERVICE，绑 80 会 fatal 崩环）。
+  systemd.services.tailscale-derper.serviceConfig.ExecStart = lib.mkForce (
+    "${lib.getExe' config.services.tailscale.derper.package "derper"}"
+    + " -a :8010 -c /var/lib/derper/derper.key -hostname=183.66.27.22 -stun-port 3478"
+    + " -certmode manual -certdir /var/lib/derper -http-port=-1"
+  );
+
   services.nginx = {
     enable = true;
+
+    # HSTS：浏览器经 https 访问一次后，对 *.ry.xinlly.top 永久强制 https，
+    # 避免裸输域名发明文 HTTP 命中雨云网关的 307（→0.0.0.0）。
+    commonHttpConfig = ''
+      add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;
+    '';
 
     # DERP — derp.ry.xinlly.top
     virtualHosts."derp.ry.xinlly.top" = {
@@ -43,7 +58,7 @@ in
       };
     };
 
-    virtualHosts."mihomo.cn.xinlly.top" = {
+    virtualHosts."mihomo.ry.xinlly.top" = {
       onlySSL = true;
       listen = [{ port = 443; addr = "0.0.0.0"; ssl = true; }];
       sslCertificate = "${certPath}/fullchain.pem";
@@ -58,14 +73,14 @@ in
       };
     };
 
-    # 测试页 — test.cn.xinlly.top
-    virtualHosts."test.cn.xinlly.top" = {
+    # 测试页 — test.ry.xinlly.top
+    virtualHosts."test.ry.xinlly.top" = {
       onlySSL = true;
       listen = [{ port = 443; addr = "0.0.0.0"; ssl = true; }];
       sslCertificate = "${certPath}/fullchain.pem";
       sslCertificateKey = "${certPath}/key.pem";
       locations."/" = {
-        return = "200 '<!DOCTYPE html><html><head><meta charset=utf-8><title>Test</title></head><body><h1>✅ TLS OK</h1><p>test.cn.xinlly.top | 证书正常</p></body></html>'";
+        return = "200 '<!DOCTYPE html><html><head><meta charset=utf-8><title>Test</title></head><body><h1>✅ TLS OK</h1><p>test.ry.xinlly.top | 证书正常</p></body></html>'";
         extraConfig = ''
           default_type text/html;
         '';
@@ -73,7 +88,7 @@ in
     };
 
     # 树洞反代 — nginx → socat(localhost:18080) → SOCKS5 → 目标
-    virtualHosts."treehole.cn.xinlly.top" = {
+    virtualHosts."treehole.ry.xinlly.top" = {
       onlySSL = true;
       listen = [{ port = 443; addr = "0.0.0.0"; ssl = true; }];
       sslCertificate = "${certPath}/fullchain.pem";
