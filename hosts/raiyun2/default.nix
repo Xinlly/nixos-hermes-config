@@ -10,6 +10,7 @@
     ./disk-config.nix
     ./derper.nix
     ./easytier.nix
+    ./treehole.nix
     (modulesPath + "/profiles/qemu-guest.nix")  # virtio 驱动（磁盘/网络/balloon）
   ];
 
@@ -46,7 +47,7 @@
     PasswordAuthentication = true;
   };
 
-  # 防火墙 — 放行 SSH
+  # 防火墙 — 放行 SSH（tree-hole 经本机 nginx 443 反代，不对外开 3000）
   networking.firewall.allowedTCPPorts = [ 22 ];
 
   # 初始 root 密码（首次登录后立刻改掉，rebuild 不会覆盖）

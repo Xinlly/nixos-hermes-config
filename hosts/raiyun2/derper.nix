@@ -87,40 +87,19 @@ in
       };
     };
 
-    # 树洞反代 — nginx → socat(localhost:18080) → SOCKS5 → 目标
+    # 树洞反代 — nginx → 本机 tree-hole 服务(127.0.0.1:3000)
     virtualHosts."treehole.ry.xinlly.top" = {
       onlySSL = true;
       listen = [{ port = 443; addr = "0.0.0.0"; ssl = true; }];
       sslCertificate = "${certPath}/fullchain.pem";
       sslCertificateKey = "${certPath}/key.pem";
       locations."/" = {
-        proxyPass = "https://127.0.0.1:18080";
+        proxyPass = "http://127.0.0.1:3000";
         proxyWebsockets = true;
         extraConfig = ''
-          proxy_ssl_verify off;
-          proxy_ssl_server_name on;
-          proxy_ssl_name personal-tree-hole.blowout44-juicerzmco.chatgpt.site;
-          proxy_set_header Host personal-tree-hole.blowout44-juicerzmco.chatgpt.site;
+          proxy_read_timeout 3600s;
         '';
       };
-    };
-  };
-
-  # socat 转发：localhost:18080 → 目标:443，走 SOCKS5 代理
-  systemd.services.treehole-socat = {
-    description = "Tree Hole socat forwarder via SOCKS5";
-    after = [ "network.target" "mihomo.service" ];
-    wants = [ "mihomo.service" ];
-    wantedBy = [ "multi-user.target" ];
-    serviceConfig = {
-      User = "root";
-      ExecStart = toString [
-        "${pkgs.socat}/bin/socat"
-        "TCP4-LISTEN:18080,reuseaddr,fork"
-        "SOCKS5:127.0.0.1:personal-tree-hole.blowout44-juicerzmco.chatgpt.site:443,socksport=35353"
-      ];
-      Restart = "always";
-      RestartSec = 10;
     };
   };
 }
