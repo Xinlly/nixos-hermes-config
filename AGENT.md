@@ -42,18 +42,23 @@ nixos/
 
 新增主机 = 在 `hosts/<name>/` 加目录 + flake.nix 注册一个 `nixosConfigurations.<name>`。
 
-## 部署工作流与硬闸门
+## 分支策略与部署工作流（硬闸门）
+
+**分支定位**
+- `develop`：日常集成 + **测试分发**分支。所有改动在此开发、提交；未测的配置只发去 `test`。
+- `master`：**正式分发**分支。只有 develop 上测稳后才 `--no-ff` 合入；正式部署只从 master 走。
+- GitHub 默认分支保持 `master`，不要改。
 
 只改 workspace 源文件，**严禁直接手改 `/etc/nixos`**（除授权轮内的标准同步）。
 
-1. 改 `hosts/ common/ modules/ flake.nix` 等源文件 → commit → push。
-2. 授权后 `rsync -av --exclude='.git' workspace/ /etc/nixos/`（**无 `--delete`**）。
-3. 同步后 `diff -rq --exclude='.git'` 必须零差异。
-4. 授权后重建：
-   - `nixos-rebuild test`：仅当前运行生效，**不改 boot 默认代**，重启回旧版。
-   - `nixos-rebuild switch`：持久化为 boot 默认（需明确授权）。
+1. 在 `develop` 的 worktree 改 `hosts/ common/ modules/ flake.nix` 等源文件 → commit → push develop。
+2. **测试分发（develop → test）**：授权后 `rsync -av --exclude='.git' <develop worktree>/ /etc/nixos/`（**无 `--delete`**）→ 回读核验分支/标记 → `nixos-rebuild test`。
+   - `test` 仅当前运行生效，**不改 boot 默认代**，重启即回退；测试失败可反复发 develop，不影响 master。
+3. 测稳后 `git checkout master && git merge --no-ff develop`（在 worktree/临时区做，master 合并不直接在 primary 写业务改动）。
+4. **正式分发（master → switch）**：授权后 rsync master → /etc/nixos → `nixos-rebuild switch`（持久化为 boot 默认，需明确授权）。
+5. 每次同步后 `diff -rq --exclude='.git'` 必须零差异；rsync 源必须与目标分支一致（测试=develop worktree，正式=master）。
 
-未获逐轮授权前禁止：rsync 到 /etc、任何 rebuild/switch、重启 Paseo daemon / agent、`wsl --shutdown`、改默认发行版 / `.wslconfig`。
+未获逐轮授权前禁止：rsync 到 /etc、任何 rebuild/switch、develop→master 合并、重启 Paseo daemon / agent、`wsl --shutdown`、改默认发行版 / `.wslconfig`。
 
 代理（本地 35353）：重建前在目标 tty 执行 `set-proxy` + `set-nix-proxy`，并核验 nix-daemon 进程 environ 带代理。详见 `nixos-hermes-safe-ops` skill。
 

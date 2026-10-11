@@ -231,10 +231,14 @@ in
         playwright = {
           command = "npx";
           args = [ "-y" "@playwright/mcp" "--cdp-endpoint" "http://127.0.0.1:9223" ];
+          idle_timeout_seconds = 1800;
+          max_lifetime_seconds = 21600;
         };
         context7 = {
           command = "npx";
           args = [ "-y" "@upstash/context7-mcp" ];
+          idle_timeout_seconds = 1800;
+          max_lifetime_seconds = 21600;
         };
         electerm = {
           url = "http://127.0.0.1:30837/mcp";
@@ -245,6 +249,8 @@ in
         siyuan_sisyphus = {
           command = "${pkgs.nodejs_22}/bin/node";
           args = [ "/mnt/d/Users/Admin0/SiYuan/data/plugins/siyuan-plugins-mcp-sisyphus/mcp-server.cjs" ];
+          idle_timeout_seconds = 1800;
+          max_lifetime_seconds = 21600;
           env = {
             SIYUAN_API_URL = "http://127.0.0.1:6806";
             SIYUAN_TOKEN = "\${SIYUAN_TOKEN}";
@@ -253,6 +259,8 @@ in
         cua-driver = {
           command = "/mnt/c/Users/Admin0/AppData/Local/Programs/Cua/cua-driver/bin/cua-driver.exe";
           args = [ "mcp" ];
+          idle_timeout_seconds = 1800;
+          max_lifetime_seconds = 21600;
         };
       };
     };

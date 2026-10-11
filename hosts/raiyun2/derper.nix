@@ -8,7 +8,7 @@ in
 {
   services.tailscale.derper = {
     enable = true;
-    domain = "derp.cn.xinlly.top";
+    domain = "derp.ry.xinlly.top";
     port = 8010;              # DERP 内部端口，nginx 反代到它
     stunPort = 3478;          # 映射自公网 53478
     configureNginx = false;    # 禁用内置 nginx/Let's Encrypt（无公网 80/443）
@@ -17,18 +17,28 @@ in
 
   networking.firewall.allowedTCPPorts = [ 443 ];
 
-  # tailscaled 走代理连协调服务器
+  # tailscaled 走代理连协调服务器；DERP 自有域名直连（NO_PROXY 放行）
   systemd.services.tailscaled.serviceConfig.Environment = [
     "HTTP_PROXY=http://127.0.0.1:35353"
     "HTTPS_PROXY=http://127.0.0.1:35353"
     "ALL_PROXY=socks5://127.0.0.1:35353"
+    "NO_PROXY=xinlly.top,.xinlly.top,127.0.0.1,localhost"
   ];
+
+  # derper 走 nixpkgs 默认：明文 HTTP:8010（hostname=derp.ry.xinlly.top），
+  # TLS 由 nginx 用 hk 分发的 LE 证书在 443 终结后反代——与 raiyun 完全一致。
 
   services.nginx = {
     enable = true;
 
-    # DERP — derp.cn.xinlly.top
-    virtualHosts."derp.cn.xinlly.top" = {
+    # HSTS：浏览器经 https 访问一次后，对 *.ry.xinlly.top 永久强制 https，
+    # 避免裸输域名发明文 HTTP 命中雨云网关的 307（→0.0.0.0）。
+    commonHttpConfig = ''
+      add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;
+    '';
+
+    # DERP — derp.ry.xinlly.top
+    virtualHosts."derp.ry.xinlly.top" = {
       onlySSL = true;
       listen = [{ port = 443; addr = "0.0.0.0"; ssl = true; }];
       sslCertificate = "${certPath}/fullchain.pem";
@@ -43,7 +53,7 @@ in
       };
     };
 
-    virtualHosts."mihomo.cn.xinlly.top" = {
+    virtualHosts."mihomo.ry.xinlly.top" = {
       onlySSL = true;
       listen = [{ port = 443; addr = "0.0.0.0"; ssl = true; }];
       sslCertificate = "${certPath}/fullchain.pem";
@@ -58,54 +68,36 @@ in
       };
     };
 
-    # 测试页 — test.cn.xinlly.top
-    virtualHosts."test.cn.xinlly.top" = {
+    # 测试页 — test.ry.xinlly.top
+    virtualHosts."test.ry.xinlly.top" = {
       onlySSL = true;
       listen = [{ port = 443; addr = "0.0.0.0"; ssl = true; }];
       sslCertificate = "${certPath}/fullchain.pem";
       sslCertificateKey = "${certPath}/key.pem";
       locations."/" = {
-        return = "200 '<!DOCTYPE html><html><head><meta charset=utf-8><title>Test</title></head><body><h1>✅ TLS OK</h1><p>test.cn.xinlly.top | 证书正常</p></body></html>'";
+        return = "200 '<!DOCTYPE html><html><head><meta charset=utf-8><title>Test</title></head><body><h1>✅ TLS OK</h1><p>test.ry.xinlly.top | 证书正常</p></body></html>'";
         extraConfig = ''
           default_type text/html;
         '';
       };
     };
 
-    # 树洞反代 — nginx → socat(localhost:18080) → SOCKS5 → 目标
-    virtualHosts."treehole.cn.xinlly.top" = {
+    # 树洞反代 — nginx → 本机 tree-hole 服务(127.0.0.1:3000)
+    virtualHosts."treehole.ry.xinlly.top" = {
       onlySSL = true;
       listen = [{ port = 443; addr = "0.0.0.0"; ssl = true; }];
       sslCertificate = "${certPath}/fullchain.pem";
       sslCertificateKey = "${certPath}/key.pem";
       locations."/" = {
-        proxyPass = "https://127.0.0.1:18080";
+        proxyPass = "http://127.0.0.1:3000";
         proxyWebsockets = true;
         extraConfig = ''
-          proxy_ssl_verify off;
-          proxy_ssl_server_name on;
-          proxy_ssl_name personal-tree-hole.blowout44-juicerzmco.chatgpt.site;
-          proxy_set_header Host personal-tree-hole.blowout44-juicerzmco.chatgpt.site;
+          proxy_set_header Host              $host;
+          proxy_set_header X-Forwarded-Proto $scheme;
+          proxy_set_header X-Forwarded-Host  $http_host;
+          proxy_read_timeout 3600s;
         '';
       };
-    };
-  };
-
-  # socat 转发：localhost:18080 → 目标:443，走 SOCKS5 代理
-  systemd.services.treehole-socat = {
-    description = "Tree Hole socat forwarder via SOCKS5";
-    after = [ "network.target" "mihomo.service" ];
-    wants = [ "mihomo.service" ];
-    wantedBy = [ "multi-user.target" ];
-    serviceConfig = {
-      User = "root";
-      ExecStart = toString [
-        "${pkgs.socat}/bin/socat"
-        "TCP4-LISTEN:18080,reuseaddr,fork"
-        "SOCKS5:127.0.0.1:personal-tree-hole.blowout44-juicerzmco.chatgpt.site:443,socksport=35353"
-      ];
-      Restart = "always";
-      RestartSec = 10;
     };
   };
 }
