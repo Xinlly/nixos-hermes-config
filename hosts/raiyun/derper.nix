@@ -17,11 +17,12 @@ in
 
   networking.firewall.allowedTCPPorts = [ 443 ];
 
-  # tailscaled 走代理连协调服务器
+  # tailscaled 走代理连协调服务器；DERP 自有域名直连（NO_PROXY 放行）
   systemd.services.tailscaled.serviceConfig.Environment = [
     "HTTP_PROXY=http://127.0.0.1:35353"
     "HTTPS_PROXY=http://127.0.0.1:35353"
     "ALL_PROXY=socks5://127.0.0.1:35353"
+    "NO_PROXY=xinlly.top,.xinlly.top,127.0.0.1,localhost"
   ];
 
   services.nginx = {
