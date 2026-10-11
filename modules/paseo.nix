@@ -68,5 +68,19 @@
         };
       };
     };
+
+    # 云端 STT（SiliconFlow，OpenAI 兼容）非敏感配置
+    environment = {
+      OPENAI_STT_BASE_URL = "https://api.siliconflow.cn/v1";
+      STT_MODEL = "FunAudioLLM/SenseVoiceSmall";
+      PASEO_DICTATION_STT_PROVIDER = "openai";
+      PASEO_VOICE_STT_PROVIDER = "openai";
+      PASEO_DICTATION_LANGUAGE = "zh";
+      PASEO_VOICE_LANGUAGE = "zh";
+    };
   };
+
+  # 密钥仅引用路径；文件由人工创建，不进 nix/store/git
+  systemd.services.paseo.serviceConfig.EnvironmentFile =
+    [ "/var/lib/hermes/.paseo/secret.env" ];
 }
