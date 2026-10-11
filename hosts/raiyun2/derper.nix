@@ -15,23 +15,18 @@ in
     openFirewall = true;
   };
 
-  networking.firewall.allowedTCPPorts = [ 443 8010 ];
+  networking.firewall.allowedTCPPorts = [ 443 ];
 
-  # tailscaled 走代理连协调服务器
+  # tailscaled 走代理连协调服务器；DERP 自有域名直连（NO_PROXY 放行）
   systemd.services.tailscaled.serviceConfig.Environment = [
     "HTTP_PROXY=http://127.0.0.1:35353"
     "HTTPS_PROXY=http://127.0.0.1:35353"
     "ALL_PROXY=socks5://127.0.0.1:35353"
+    "NO_PROXY=xinlly.top,.xinlly.top,127.0.0.1,localhost"
   ];
 
-  # derper 直跑 TLS（自签 IP 证书，不发 SNI），外部经 NAT 58010→8010 直连。
-  # 覆盖 nixpkgs 默认 ExecStart：-certmode manual + hostname=IP 自动自签；
-  # -http-port=-1 关闭默认 80 明文监听（DynamicUser 无 CAP_NET_BIND_SERVICE，绑 80 会 fatal 崩环）。
-  systemd.services.tailscale-derper.serviceConfig.ExecStart = lib.mkForce (
-    "${lib.getExe' config.services.tailscale.derper.package "derper"}"
-    + " -a :8010 -c /var/lib/derper/derper.key -hostname=183.66.27.22 -stun-port 3478"
-    + " -certmode manual -certdir /var/lib/derper -http-port=-1"
-  );
+  # derper 走 nixpkgs 默认：明文 HTTP:8010（hostname=derp.ry.xinlly.top），
+  # TLS 由 nginx 用 hk 分发的 LE 证书在 443 终结后反代——与 raiyun 完全一致。
 
   services.nginx = {
     enable = true;
@@ -97,6 +92,9 @@ in
         proxyPass = "http://127.0.0.1:3000";
         proxyWebsockets = true;
         extraConfig = ''
+          proxy_set_header Host              $host;
+          proxy_set_header X-Forwarded-Proto $scheme;
+          proxy_set_header X-Forwarded-Host  $http_host;
           proxy_read_timeout 3600s;
         '';
       };
