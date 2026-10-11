@@ -90,6 +90,7 @@ in
     ../../common/base.nix
     ../../common/proxy.nix
     ../../modules/paseo.nix
+    ./easytier.nix
     ./users.nix
     ./hermes.nix
   ];
