@@ -66,6 +66,23 @@
           # 显式钉死真实 HOME；overlay 合并到完整环境，PATH 等照常继承
           env.HOME = "/var/lib/hermes";
         };
+
+        # 管理者专用并列 provider：同一 hermes wrapper，但经 --profile manager
+        # 使用独立 manager profile（modules/hermes/manager-profile.nix）。
+        # 该 profile 的 config 已禁用 hermes-lark-streaming（飞书流式卡片不加载）。
+        providers."hermes-manager" = {
+          extends = "acp";
+          label = "哆啦（管理者）";
+          description = "管理者专用 Hermes（独立 manager profile）；该 profile 已禁用 hermes-lark-streaming，不加载飞书流式卡片插件。";
+          command = [
+            "/run/current-system/sw/bin/hermes"
+            "--profile"
+            "manager"
+            "acp"
+          ];
+          # 与 hermes provider 一致：显式钉死真实 HOME，其余环境照常继承
+          env.HOME = "/var/lib/hermes";
+        };
       };
     };
 
