@@ -8,6 +8,7 @@
     ../../modules/hermes/agent.nix
     ../../modules/hermes/services.nix
     ../../modules/hermes/hermes-plugins.nix
+    ../../modules/hermes/manager-profile.nix
     ../../modules/hermes/vban-receiver.nix
     ../../modules/hermes/hindsight.nix
   ];

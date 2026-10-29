@@ -31,14 +31,18 @@ in
 
     settings.plugins = {
       enabled = [
-        "hermes-lark-streaming"
         "matt-workflows"
       ];
-      # lark-streaming 启用（飞书流式卡片，gateway 用）；仅保持 curator 禁用。
-      # 注意：该插件 v1.5.0 无 ACP 模式门控，hermes 身份的 ACP（Zed“哆啦”）加载可能卡死，
-      # 按既定决策暂不处理，若复现再改其启动方式。
+      # 2026-10-30 决定：hermes-lark-streaming 在 default 声明源即不启用——
+      # 从 enabled 移除并加入 disabled（disabled 恒优先，双保险）。gateway 重启后
+      # 也不再加载；飞书流式卡片停用是已知接受后果，由管理者窗口另排，不属本改动。
+      # 恢复方式：把 "hermes-lark-streaming" 从 disabled 移除并加回 enabled。
+      # 注意：extraPlugins 包安装与 nix-managed-* 软链全部保留——禁加载≠不安装，
+      # 保留便于未来恢复；manager profile（modules/hermes/manager-profile.nix）
+      # 亦只读共享同一插件包并在其 config 中禁用。
       disabled = [
         "hermes-knowledge-curator"
+        "hermes-lark-streaming"
       ];
     };
   };
