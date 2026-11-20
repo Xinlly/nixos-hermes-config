@@ -36,6 +36,7 @@ in
       model = {
         default = "ark-code-latest";
         provider = "ark";
+        context_length = 1000000;
       };
 
       # 主模型备援 — 主模型失败时自动切换
