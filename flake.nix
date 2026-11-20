@@ -6,8 +6,8 @@
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
     # WSL2 适配层
     nixos-wsl.url = "github:nix-community/NixOS-WSL/main";
-    # Hermes Agent upstream main，当前仅由 nixos 使用。
-    hermes-agent.url = "github:NousResearch/hermes-agent/main";
+    # Hermes Agent 正式发布版本，当前仅由 nixos 使用。
+    hermes-agent.url = "github:NousResearch/hermes-agent/v0.23.3";
     # Hermes 插件目录中 Hindsight 1.2.4 的审核提交。
     hindsight-hermes.url = "github:vectorize-io/hindsight/f14cc1eb5624b0374cb4d82768eb2e0b9c21ae24";
     hindsight-hermes.flake = false;
