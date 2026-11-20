@@ -27,9 +27,9 @@ in
       security = { redact_secrets = true; };
       privacy = { redact_pii = false; };
 
-      # 日志级别（DEBUG 用于排查流式卡片截断问题，用完改回 INFO）
+      # 日志级别
       logging = {
-        level = "DEBUG";
+        level = "INFO";
       };
 
       # 主模型
