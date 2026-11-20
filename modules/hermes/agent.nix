@@ -51,17 +51,17 @@ in
           model = "MiniMax-M3";
         };
         compression = {
-          provider = "deepseek";
-          model = "deepseek-v4-flash";
+          provider = "minimax-cn";
+          model = "MiniMax-M3";
         };
         # 轻量任务
-        title_generation = { provider = "deepseek"; model = "deepseek-v4-flash"; };
-        skills_hub        = { provider = "deepseek"; model = "deepseek-v4-flash"; };
-        approval          = { provider = "deepseek"; model = "deepseek-v4-flash"; };
-        mcp               = { provider = "deepseek"; model = "deepseek-v4-flash"; };
-        tts_audio_tags    = { provider = "deepseek"; model = "deepseek-v4-flash"; };
-        profile_describer = { provider = "deepseek"; model = "deepseek-v4-flash"; };
-        monitor           = { provider = "deepseek"; model = "deepseek-v4-flash"; };
+        title_generation = { provider = "minimax-cn"; model = "MiniMax-M3"; };
+        skills_hub        = { provider = "minimax-cn"; model = "MiniMax-M3"; };
+        approval          = { provider = "minimax-cn"; model = "MiniMax-M3"; };
+        mcp               = { provider = "minimax-cn"; model = "MiniMax-M3"; };
+        tts_audio_tags    = { provider = "minimax-cn"; model = "MiniMax-M3"; };
+        profile_describer = { provider = "minimax-cn"; model = "MiniMax-M3"; };
+        monitor           = { provider = "minimax-cn"; model = "MiniMax-M3"; };
       };
 
       # TTS — 自定义 MiMo 提供商（xiaomiTTS2OpenAITTSAPI 代理）
