@@ -2,7 +2,7 @@
 #
 # 这些是各子模块依赖的通用构建产物，改频极低。
 # 通过 config.services.hermesRuntime.* 导出供 agent.nix / services.nix 引用。
-{ config, pkgs, lib, inputs, ... }:
+{ config, pkgs, lib, ... }:
 let
   # ═══════════════════════════════════════════════
   # portaudio — 编译 PulseAudio 后端（替代 nixpkgs 默认 ALSA 版本）
@@ -31,88 +31,25 @@ let
   };
 
   # ═══════════════════════════════════════════════
-  # hermes-agent 源码根（本地 backport）
-  # ═══════════════════════════════════════════════
-  # 修复 ACP turn 后处理对 final_response=None 调用 .startswith 的崩溃：
-  # 当 key 存在但值为 None（turn 被中断且无 partial / 截断重试耗尽）时，
-  # result.get("final_response", "") 仍返回 None，server.py 对其 .startswith
-  # 抛 'NoneType' ... 'startswith'（JSON-RPC -32603）；该段在 executor 的 try
-  # 之外，异常跳过 is_running 复位，会话永久假-idle 不消费队列。
-  # 最小修复 result.get("final_response") or ""。基于精确 tag v2026.8.13，
-  # 上游 main 至今未修，故本地 backport，只移这一个修复，不整体升版本。
-  # 命中点：下方 shim 把该源码根插到 sys.path[0]，生产运行时 acp_adapter
-  # 从这里加载（遮蔽 sealed env 内同名副本，已实测 __file__ 指向 -source 根），
-  # 因此 patch 源码根即修复生产路径，无需重打密封 venv。
-  hermesAgentSource = pkgs.runCommand "hermes-agent-source-patched" {
-    nativeBuildInputs = [ pkgs.buildPackages.patch ];
-  } ''
-    cp -r ${inputs.hermes-agent} $out
-    chmod -R u+w $out
-    patch -d $out -p1 < ${../../patches/hermes-agent/0001-acp-fix-none-final-response.patch}
-  '';
+  # ACP backport 已由上游接替，保留补丁以便回查：
+  # patches/hermes-agent/0001-acp-fix-none-final-response.patch
+  # 新版的 wheel 已打包顶层模块，因此停用旧的 sys.path 源码覆盖。
+  # 旧 httpx 全局代理补丁也停用，改由 HTTP_PROXY / NO_PROXY 控制请求。
 
-  # ═══════════════════════════════════════════════
-  # sitecustomize.py — 四合一 Python 启动 shim
-  # ═══════════════════════════════════════════════
-  # ① PortAudio ctypes 劫持: NixOS CPython no-ldconfig 补丁导致
-  #    ctypes.util.find_library("portaudio") 始终返回 None。
-  #    直接返回 Nix store 中 libportaudio.so 路径。
-  # ② libpulse 劫持: 同①，PortAudio PulseAudio 后端需要 libpulse.so。
-  #    LD_LIBRARY_PATH 已在 serviceConfig 设好，此处再做 ctypes 兜底。
-  # ③ 源码扩展: v0.20 密封 venv 仅含 site-packages 中的 hermes_cli 等子模块，
-  #    遗漏 registration_lifecycle / run_agent / cli / toolsets 等顶层模块。
-  #    注入整个源码根目录，确保 hermes_cli.plugins 等 import 能找到顶层模块。
-  # ⑦ web_search 代理注入 — 劫持 httpx，从 HERMES_SEARCH_PROXY 环境变量读取代理
-  #
-  # 已删除的历史 patch:
-  #   ⑤ 飞书卡片 gateway 覆盖 — 插件自己做 runtime monkey patching
-  #   ⑧ CUA WSL manifest 路径 — v0.20 上游原生支持 HERMES_CUA_DRIVER_CMD + WSL 路径转换
+  # NixOS 的 ctypes.find_library 找不到 store 内的 PortAudio / PulseAudio。
   shim = pkgs.writeTextDir "sitecustomize.py" ''
     import ctypes.util as _cu
-    import os as _os
-    import sys as _sys
-    from pathlib import Path as _Path
 
-    _PORTAUDIO_PATH = "${portaudio}/lib/libportaudio.so"
-    _PULSE_PATH = "${pkgs.libpulseaudio}/lib/libpulse.so"
-    _HERMES_SOURCE_ROOT = "${hermesAgentSource}"
     _orig_find_library = _cu.find_library
 
     def _patched_find_library(name, *args, **kwargs):
         if name == "portaudio":
-            return _PORTAUDIO_PATH
+            return "${portaudio}/lib/libportaudio.so"
         if name == "pulse":
-            return _PULSE_PATH
+            return "${pkgs.libpulseaudio}/lib/libpulse.so"
         return _orig_find_library(name, *args, **kwargs)
 
     _cu.find_library = _patched_find_library
-
-    # ③ 源码扩展 — 把 hermes-agent 源码根目录插入 sys.path 最前面，
-    #    让密封 venv 找不到的顶层模块（registration_lifecycle / run_agent /
-    #    cli / toolsets / model_tools 等）能从源码直接导入。
-    if _HERMES_SOURCE_ROOT not in _sys.path:
-        _sys.path.insert(0, _HERMES_SOURCE_ROOT)
-
-    # ⑦ web_search 代理注入 — 劫持 httpx，从 HERMES_SEARCH_PROXY 环境变量读取代理
-    _search_proxy = _os.environ.get("HERMES_SEARCH_PROXY", "")
-    if _search_proxy:
-        try:
-            import httpx as _httpx
-            _orig_async_init = _httpx.AsyncClient.__init__
-            _orig_client_init = _httpx.Client.__init__
-
-            def _patched_async_init(self, *args, **kwargs):
-                kwargs.setdefault("proxy", _search_proxy)
-                _orig_async_init(self, *args, **kwargs)
-
-            def _patched_client_init(self, *args, **kwargs):
-                kwargs.setdefault("proxy", _search_proxy)
-                _orig_client_init(self, *args, **kwargs)
-
-            _httpx.AsyncClient.__init__ = _patched_async_init
-            _httpx.Client.__init__ = _patched_client_init
-        except Exception:
-            pass
   '';
 
   # ═══════════════════════════════════════════════
@@ -121,7 +58,7 @@ let
   # 自动: cd workspace → sudo -u hermes → 注入 PYTHONPATH → 运行 hermes
   hermesUWrapper = pkgs.writeShellScriptBin "hermes-u" ''
     set -e
-    export PYTHONPATH="${shim}"
+    export PYTHONPATH="${pythonPath}"
     cd /var/lib/hermes/workspace || true
     if [ "$(whoami)" != "hermes" ]; then
       export PATH="/etc/profiles/per-user/hermes/bin:$PATH"
@@ -133,43 +70,35 @@ let
   # ═══════════════════════════════════════════════
   # hermes 命令包装 — sitecustomize 内置到裸 hermes
   # ═══════════════════════════════════════════════
-  # 问题: 裸 hermes 启动 Python 时 sys.path 缺源码根目录，
-  #   `hermes_cli/plugins.py:62` 的 `from registration_lifecycle import ...` 报 ModuleNotFoundError。
-  # 解决: 用 makeWrapper 把 shim (含 sitecustomize.py 的目录) prepend 进 hermes 二进制的 PYTHONPATH，
-  #   让裸 hermes / hermes-acp / hermes-agent 任何模式自动有 sitecustomize。
-  # 注: hermes 入口脚本的最后一行是 `exec .../hermes-agent-env/bin/hermes "$@"`，shell 环境继承生效。
-  hermesAgentPkg = inputs.hermes-agent.packages.${pkgs.stdenv.hostPlatform.system}.default;
+  hermesAgentPkg = config.services.hermes-agent.package;
+  python = hermesAgentPkg.python;
   hermesWithShim = pkgs.runCommand "hermes-agent-with-shim" {
     nativeBuildInputs = [ pkgs.makeWrapper ];
   } ''
     mkdir -p $out/bin
     for bin in hermes hermes-acp hermes-agent; do
       makeWrapper ${hermesAgentPkg}/bin/$bin $out/bin/$bin \
-        --prefix PYTHONPATH : "${shim}"
+        --prefix PYTHONPATH : "${pythonPath}"
     done
   '';
 
-  # pymupdf + 其传递依赖（含 mupdf Python 绑定和原生 .so）
-  # requiredPythonModules 展开传递依赖，makeSearchPath 构建完整 PYTHONPATH
-  pymupdfDeps = pkgs.python312.pkgs.requiredPythonModules [ pkgs.python312Packages.pymupdf pkgs.python312Packages.pymupdf4llm ];
-  pymupdfPath = lib.makeSearchPath "lib/python3.12/site-packages" pymupdfDeps;
-
-  # openpyxl + pandas + markitdown + xlsxwriter（Excel编辑 + Office文档→Markdown + 图表嵌入，pandas/markitdown 含 numpy 等 C 扩展）
-  officeDeps = pkgs.python312.pkgs.requiredPythonModules [ pkgs.python312Packages.openpyxl pkgs.python312Packages.pandas pkgs.python312Packages.markitdown pkgs.python312Packages.xlsxwriter ];
-  officePath = lib.makeSearchPath "lib/python3.12/site-packages" officeDeps;
-
-  # ═══════════════════════════════════════════════
-  # PYTHONPATH — 唯一定义点
-  # ═══════════════════════════════════════════════
-  # Gateway systemd 单元、.env 文件、CLI wrapper 三处共用同一值。
-  # 包含: sitecustomize.py shim + pymupdf + office(含传递依赖)
-  # 注: 飞书卡片插件通过 hermes-plugins.nix 的 extraPlugins 加载，不在此处
-  pythonPath = "${shim}:${pymupdfPath}:${officePath}";
+  # 原生扩展必须与上游 Hermes 自带解释器使用同一 Python ABI。
+  documentDeps = python.pkgs.requiredPythonModules (with python.pkgs; [
+    pymupdf
+    pymupdf4llm
+    openpyxl
+    pandas
+    markitdown
+    xlsxwriter
+  ]);
+  documentPath = lib.makeSearchPath python.sitePackages documentDeps;
+  pythonPath = "${shim}:${config.services.hermesRuntime.hindsightClient}/${python.sitePackages}:${documentPath}";
 in
 {
   options.services.hermesRuntime = {
     portaudio = lib.mkOption { type = lib.types.package; internal = true; };
     shim = lib.mkOption { type = lib.types.package; internal = true; };
+    hindsightClient = lib.mkOption { type = lib.types.package; internal = true; };
     hermesUWrapper = lib.mkOption { type = lib.types.package; internal = true; };
     hermesWithShim = lib.mkOption { type = lib.types.package; internal = true; };
     pythonPath = lib.mkOption { type = lib.types.str; internal = true; };

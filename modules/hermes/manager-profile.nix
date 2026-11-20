@@ -28,6 +28,11 @@ let
   # Hermes 可直接读取。
   managerConfig =
     pkgs.writeText "manager-hermes-config.yaml" (builtins.toJSON managerSettings);
+  managerHindsight = pkgs.writeText "manager-hindsight.json" (builtins.toJSON {
+    mode = "local_external";
+    external_base_url = "http://localhost:8888";
+    bank_id = "hermes-manager";
+  });
 in
 {
   system.activationScripts.hermes-manager-profile = {
@@ -49,6 +54,12 @@ in
 
       # ── (a) config.yaml：声明源覆盖回写（与上游 default 同策略），0660 对齐 ──
       install -o ${ha.user} -g ${ha.group} -m 0660 ${managerConfig} ${profileDir}/config.yaml
+
+      # 初次连接 Hindsight 使用独立 bank，保留已有 profile 配置。
+      install -d -o ${ha.user} -g ${ha.group} -m 2770 ${profileDir}/hindsight
+      if [ ! -e ${profileDir}/hindsight/config.json ] && [ ! -L ${profileDir}/hindsight/config.json ]; then
+        install -o ${ha.user} -g ${ha.group} -m 0640 ${managerHindsight} ${profileDir}/hindsight/config.json
+      fi
 
       # ── (c) .env / .env.secrets：软链对齐仓外既有文件（同机同用户）。──
       # 仅落符号链接，密钥内容绝不进 nix store / git。

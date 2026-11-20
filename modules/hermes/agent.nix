@@ -265,9 +265,6 @@ in
       };
     };
 
-    # ── Python 依赖组 ──
-    extraDependencyGroups = [ "feishu" "hindsight" "voice" "messaging" "anthropic" ];
-
     # ── 额外系统包 ──
     extraPackages = [
       cfg.portaudio
@@ -293,7 +290,8 @@ in
       MINIMAX_CN_BASE_URL = "https://api.minimaxi.com/anthropic";
       HTTP_PROXY = "http://127.0.0.1:35353";
       HTTPS_PROXY = "http://127.0.0.1:35353";
-      HERMES_SEARCH_PROXY = "http://127.0.0.1:35353";
+      NO_PROXY = "localhost,127.0.0.1,::1";
+      no_proxy = "localhost,127.0.0.1,::1";
       AGENT_BROWSER_PROXY = "http://127.0.0.1:35353";
       AGENT_BROWSER_PROXY_BYPASS = "localhost,127.0.0.1";
       DBUS_SESSION_BUS_ADDRESS = "unix:path=/tmp/dbus-session";  # soffice headless 绕过 /run/user/UID 权限

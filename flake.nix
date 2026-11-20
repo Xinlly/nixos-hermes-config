@@ -6,8 +6,11 @@
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
     # WSL2 适配层
     nixos-wsl.url = "github:nix-community/NixOS-WSL/main";
-    # Hermes Agent 发行版（v0.20.1 / 2026.8.13）
-    hermes-agent.url = "github:NousResearch/hermes-agent/v2026.8.13";
+    # Hermes Agent upstream main，当前仅由 nixos 使用。
+    hermes-agent.url = "github:NousResearch/hermes-agent/main";
+    # Hermes 插件目录中 Hindsight 1.2.4 的审核提交。
+    hindsight-hermes.url = "github:vectorize-io/hindsight/f14cc1eb5624b0374cb4d82768eb2e0b9c21ae24";
+    hindsight-hermes.flake = false;
     # llm-agents.nix — AI 编码代理软件包（含 agent-browser CLI）
     llm-agents.url = "github:numtide/llm-agents.nix";
     # Paseo — 多 coding agent 编排 daemon（官方 flake，含 NixOS 模块与包）
