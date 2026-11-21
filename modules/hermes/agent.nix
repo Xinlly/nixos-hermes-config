@@ -243,6 +243,11 @@ in
         };
         electerm = {
           url = "http://127.0.0.1:30837/mcp";
+          # electerm MCP Widget 开启鉴权后必须带 Bearer 头；token 存 .env.secrets 的
+          # MCP_ELECTERM_API_KEY（禁写明文进 nix），运行时经 _expand_env_vars 展开。
+          headers = {
+            Authorization = "Bearer \${MCP_ELECTERM_API_KEY}";
+          };
         };
         paseo = {
           url = "http://127.0.0.1:6767/mcp/agents?callerAgentId=\${PASEO_AGENT_ID}";
