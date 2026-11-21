@@ -1,16 +1,19 @@
 # modules/paseo.nix — Paseo 多 coding agent 编排 daemon
 #
-# 官方 flake：github:getpaseo/paseo（flake.nix 已声明 input 并挂 nixosModule，
-# 包由该 module 以 mkDefault 指向 flake 自带包，无需在此指定 package）。
+# 官方 flake：github:getpaseo/paseo（flake.nix 已声明 input 并挂 nixosModule）。
 #
 # 以 hermes 用户运行：spawn 的 `hermes acp` 子进程复用 hermes 用户的
 # /var/lib/hermes/.hermes 配置与凭证。注意 hermes 用户真实 HOME 是
 # /var/lib/hermes（/home/hermes 不存在），故 dataDir 显式指定，
 # 且给 hermes provider 显式注入 HOME，避免 /home/hermes 假设。
-{ config, lib, pkgs, ... }:
+{ config, lib, pkgs, inputs, ... }:
 {
   services.paseo = {
     enable = true;
+    # Paseo follows this host's nixpkgs, so pin the npm cache hash for its fetcher.
+    package = inputs.paseo.packages.${pkgs.stdenv.hostPlatform.system}.paseo.override {
+      npmDepsHash = "sha256-yLTaVMgu3tc/dgngJ7RP0htJcWE0ZtQ4mouypevyv0s=";
+    };
 
     # 复用现有 hermes 系统账户（module 仅在 user=="paseo" 时才自建用户/组，
     # 故 group 也要显式给 hermes）
