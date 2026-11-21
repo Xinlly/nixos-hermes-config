@@ -163,8 +163,8 @@ index 8eedbb0..1fe8aeb 100644
 +    } else if (targetWorkspace.projectId !== own.projectId) {
 +      const reportsToParent = name === "send_agent_prompt" && target.provider === "project-manager" &&
 +        caller.labels["paseo.parent-agent-id"] === target.id && input.notifyOnFinish === false &&
-+        input.background === true && input.activeTurnBehavior !== "interrupt";
-+      if (!reportsToParent) return rejectScope("Manage agents only within your project. Final reports may be sent to your direct Project Manager with background=true and notifyOnFinish=false.");
++        input.sessionMode === undefined && input.activeTurnBehavior !== "interrupt";
++      if (!reportsToParent) return rejectScope("Manage agents only within your project. Final reports may be sent to your direct Project Manager with notifyOnFinish=false and without changing its mode or interrupting it.");
 +    }
 +    if (name === "archive_agent" && (await activeAgents()).some(
 +      (agent) => agent.labels["paseo.parent-agent-id"] === target.id,
