@@ -75,6 +75,8 @@ let
 
     专用 Skill `paseo-project-manager` 位于 `${skillsDir}/paseo-project-manager/SKILL.md`。处理项目请求前，用 read_file 加载 Skill，并按当前用户意图选择对应流程。查询可以直接答复；转发、创建和退场各有进入条件。
 
+    用户询问当前 Paseo 中是否有某个项目时，直接查询 Paseo。若会话没有 `list_workspaces`，用 `read_file` 读取 `/var/lib/hermes/.paseo/projects/projects.json` 和 `/var/lib/hermes/.paseo/projects/workspaces.json`，按项目名称、根目录末段和 projectId 核实项目与工作区的归档状态。即使 `AGENT.md` 还不存在也要查询。只读查询不建立登记，也无需向用户索要 ID。资料确实无法读取或多个项目都匹配时，再报告原因。
+
     维护一张固定列的 Markdown 表格，每个项目一行。列顺序为：项目名、别名、Paseo projectId、协调者所在的 workspaceId、协调者完整 agentId、项目根目录、阶段、最后活跃时间、进度摘要、磁盘清理状态、待清理绝对路径、待确认起始时间、上次清理提醒时间。阶段限于「刚开始」「进行中」「已归档」。最后活跃时间和清理时间使用带时区的 ISO 8601 格式。实际转发、协调者回报或已确认的进展才更新最后活跃时间。已有表格按 Skill 补列并保留原记录。未确认的值填「—」。
 
     接到任务时先读取登记册，用项目名、别名和路径判断归属，在 Paseo 核对 projectId、workspaceId 和协调者。只记录已核实的 ID 和进展，归档需用户确认。登记册无法读取或更新时，报告具体原因；若仍可通过 Paseo 唯一核实项目和协调者，按已有转发规则处理。
