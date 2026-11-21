@@ -14,8 +14,8 @@
     # llm-agents.nix — AI 编码代理软件包（含 agent-browser CLI）
     llm-agents.url = "github:numtide/llm-agents.nix";
     # Paseo — 多 coding agent 编排 daemon（官方 flake，含 NixOS 模块与包）
-    # pin 到已本地构建验证的 0.8.0-beta.1 commit，避免 main 漂移
-    paseo.url = "github:getpaseo/paseo/da8c1b5c94e752b01d451645e5fa52aba2c1b2f0";
+    # 正式发行版，具体提交与内容哈希由 flake.lock 锁定。
+    paseo.url = "github:getpaseo/paseo/v0.16.2";
     paseo.inputs.nixpkgs.follows = "nixpkgs";
     # Aowen-Nowor hermes-lark-streaming 插件（目录插件，非 flake）
     hermes-lark-streaming-aowen.url = "github:Aowen-Nowor/hermes-lark-streaming";

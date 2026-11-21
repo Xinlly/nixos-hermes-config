@@ -96,7 +96,8 @@
           ];
           env.HOME = "/var/lib/hermes";
           # Keep this provider out of the unscoped MCP catalog until target checks exist.
-          params.supportsMcpServers = false;
+          options.supportsMcpServers = false;
+          paseoTools.enabled = false;
         };
       };
     };
