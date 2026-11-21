@@ -7,15 +7,47 @@ let
   profile = "${home}/profiles/paseo-project-manager";
   workspaceRoot = hermes.settings.terminal.cwd;
   registryDir = "${workspaceRoot}/paseo-project-manager";
+  registryPath = "${registryDir}/AGENT.md";
   skillsDir = "${./skills}";
+  guard = pkgs.writeText "hermes-project-manager-file-guard.py" ''
+    import json
+    import stat
+    import sys
+    from pathlib import Path
+
+    event = json.load(sys.stdin)
+    registry = Path(${builtins.toJSON registryPath})
+    allowed = (
+        event.get("tool_name") == "write_file"
+        and (event.get("tool_input") or {}).get("path") == str(registry)
+        and registry.resolve() == registry
+    )
+    if allowed:
+        try:
+            entry = registry.lstat()
+        except FileNotFoundError:
+            pass
+        else:
+            allowed = stat.S_ISREG(entry.st_mode) and entry.st_nlink == 1
+
+    print(json.dumps({} if allowed else {
+        "action": "block",
+        "message": "Project Manager may only use write_file on its AGENT.md registry.",
+    }))
+  '';
 
   settings = lib.getAttrs [ "model" "fallback_model" "terminal" "logging" "security" ] hermes.settings // {
     providers.ark = hermes.settings.providers.ark;
     platforms.feishu.enabled = false;
     secrets.command = import ./profile-environment.nix { inherit lib pkgs hermes; };
-    # Add project tools once the MCP executor can enforce per-target permissions.
-    platform_toolsets.acp = [ ];
-    toolsets = [ ];
+    platform_toolsets.acp = [ "file" ];
+    toolsets = [ "file" ];
+    hooks_auto_accept = true;
+    hooks.pre_tool_call = [ {
+      matcher = "^(write_file|patch)$";
+      command = "${lib.getExe pkgs.python3} ${guard}";
+      fail_closed = true;
+    } ];
     skills.external_dirs = [ skillsDir ];
 
     memory = {
@@ -32,9 +64,9 @@ let
   soulFile = pkgs.writeText "paseo-project-manager-SOUL.md" ''
     # Paseo project manager
 
-    你是用户在 Paseo 中的统一任务入口。你的默认工作目录是 `${workspaceRoot}`，项目登记册仍在 `${registryDir}/AGENT.md`。使用 Hermes 文件工具按绝对路径读取和更新登记册。如果确认文件尚不存在，在这个路径初始化表格。
+    你是用户在 Paseo 中的统一任务入口。项目登记册位于 `${registryPath}`。使用 Hermes 文件工具按绝对路径读取登记册，用 write_file 更新。如果确认文件尚不存在，在这个路径初始化表格。
 
-    Hermes 文件工具的写入范围是 `${workspaceRoot}`。你的写入职责限于登记册，以及用户确认新建的项目目录和首份 HANDOFF.md。项目已有文件、工作区内的代码和 Git worktree 由协调者管理。可以按绝对路径读取所需项目资料。
+    你可以按绝对路径读取所需项目资料。Hermes 文件工具只允许 write_file 写入登记册。新建项目目录和首份 HANDOFF.md 由专用项目工具或获授权的操作者准备。缺少项目工具时，说明具体缺项。项目已有文件、工作区内的代码和 Git worktree 由协调者管理。
 
     专用 Skill `paseo-project-manager` 位于 `${skillsDir}/paseo-project-manager/SKILL.md`。处理项目请求前，用 read_file 加载 Skill，并按当前用户意图选择对应流程。查询可以直接答复；转发、创建和退场各有进入条件。
 
