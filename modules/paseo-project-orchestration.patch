@@ -1,5 +1,5 @@
 diff --git a/packages/server/src/server/agent/tools/paseo-tools.ts b/packages/server/src/server/agent/tools/paseo-tools.ts
-index 8eedbb0..1fe8aeb 100644
+index 8eedbb0..0e89b5e 100644
 --- a/packages/server/src/server/agent/tools/paseo-tools.ts
 +++ b/packages/server/src/server/agent/tools/paseo-tools.ts
 @@ -9,7 +9,7 @@ import {
@@ -22,7 +22,7 @@ index 8eedbb0..1fe8aeb 100644
    createDirectoryWorkspace?: (
      cwd: string,
      title?: string | null,
-@@ -642,6 +642,158 @@ function createToolCatalog(
+@@ -642,6 +642,156 @@ function createToolCatalog(
    const childLogger = logger.child({ module: "agent", component: "paseo-tool-catalog" });
    const callerContext = callerAgentId ? (resolveCallerContext?.(callerAgentId) ?? null) : null;
  
@@ -37,21 +37,19 @@ index 8eedbb0..1fe8aeb 100644
 +  const workspaceRoot = "/var/lib/hermes/workspace";
 +  const agentPlacement = async (id: string) =>
 +    agentManager.getAgent(id) ?? (await agentStorage.get(id));
-+  const workspaceAgents = async (id: string) => {
-+    const live = new Map(agentManager.listAgents().map((agent) => [agent.id, agent]));
-+    const stored = await agentStorage.listByWorkspace(id);
-+    return [
-+      ...stored.filter((agent) => !agent.archivedAt && (!live.has(agent.id) || live.get(agent.id)?.lifecycle === "closed")),
-+      ...Array.from(live.values()).filter((agent) => agent.workspaceId === id && agent.lifecycle !== "closed"),
-+    ];
-+  };
 +  const activeAgents = async () => {
-+    const live = new Map(agentManager.listAgents().map((agent) => [agent.id, agent]));
++    const records = await agentStorage.listAll();
++    const archived = new Set(records.filter((agent) => agent.archivedAt).map((agent) => agent.id));
++    const live = new Map(agentManager.listAgents()
++      .filter((agent) => agent.lifecycle !== "closed" && !archived.has(agent.id))
++      .map((agent) => [agent.id, agent]));
 +    return [
-+      ...(await agentStorage.listActive()).filter((agent) => !live.has(agent.id) || live.get(agent.id)?.lifecycle === "closed"),
-+      ...Array.from(live.values()).filter((agent) => agent.lifecycle !== "closed"),
++      ...records.filter((agent) => !agent.archivedAt && !live.has(agent.id)),
++      ...live.values(),
 +    ];
 +  };
++  const workspaceAgents = async (id: string) =>
++    (await activeAgents()).filter((agent) => agent.workspaceId === id);
 +  const getWorkspace = async (id: string | undefined) =>
 +    id ? (await options.workspaceRegistry?.get(id)) ?? null : null;
 +  const rejectScope = (message: string): never => {
@@ -181,7 +179,7 @@ index 8eedbb0..1fe8aeb 100644
    const parseToolInput = async (tool: PaseoToolDefinition, input: unknown): Promise<unknown> => {
      const inputSchema = tool.inputSchema;
      if (!inputSchema) {
-@@ -749,6 +901,7 @@ function createToolCatalog(
+@@ -749,6 +899,7 @@ function createToolCatalog(
      if (!isPaseoToolEnabled(options.paseoToolPolicy, name)) {
        return;
      }
@@ -189,7 +187,7 @@ index 8eedbb0..1fe8aeb 100644
      const operation = hostTools.get(name as Parameters<typeof hostTools.get>[0]);
      if (operation) {
        localHostOperations.set(name, handler);
-@@ -811,7 +964,10 @@ function createToolCatalog(
+@@ -811,7 +962,10 @@ function createToolCatalog(
        description: config.description ?? name,
        inputSchema: config.inputSchema,
        outputSchema: config.outputSchema,
@@ -201,7 +199,7 @@ index 8eedbb0..1fe8aeb 100644
      });
    };
    const toCatalog = (): PaseoToolCatalog => ({
-@@ -3299,7 +3455,60 @@ function createToolCatalog(
+@@ -3299,7 +3453,60 @@ function createToolCatalog(
      },
    );
  
