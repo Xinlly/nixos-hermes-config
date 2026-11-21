@@ -112,13 +112,13 @@ def delete_archived_project_directory(args, session_id=None):
             arguments={"path": str(path), "project_id": project_id},
         ))
         if not approved:
-            return {"error": "Deletion requires one-time user approval for this exact directory."}
+            return json.dumps({"error": "Deletion requires one-time user approval for this exact directory."})
         if _verify_scope(project_id, path, session_id) != identity:
-            return {"error": "The target changed while waiting for approval."}
+            return json.dumps({"error": "The target changed while waiting for approval."})
         _remove(path, identity)
     except (OSError, RuntimeError, ValueError) as exc:
-        return {"error": str(exc)}
-    return {"project_id": project_id, "removed_path": str(path)}
+        return json.dumps({"error": str(exc)})
+    return json.dumps({"project_id": project_id, "removed_path": str(path)})
 
 
 def register(ctx):
