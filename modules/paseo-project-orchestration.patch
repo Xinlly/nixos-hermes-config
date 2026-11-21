@@ -1,5 +1,5 @@
 diff --git a/packages/server/src/server/agent/tools/paseo-tools.ts b/packages/server/src/server/agent/tools/paseo-tools.ts
-index 8eedbb0..6b1a9c0 100644
+index 8eedbb0..1fe8aeb 100644
 --- a/packages/server/src/server/agent/tools/paseo-tools.ts
 +++ b/packages/server/src/server/agent/tools/paseo-tools.ts
 @@ -9,7 +9,7 @@ import {
@@ -11,7 +11,18 @@ index 8eedbb0..6b1a9c0 100644
  import { z } from "zod";
  import { ensureValidJson } from "../../json-utils.js";
  import type { Logger } from "pino";
-@@ -642,6 +642,155 @@ function createToolCatalog(
+@@ -139,8 +139,8 @@ export interface PaseoToolHostDependencies {
+   listActiveWorkspaces?: ArchiveDependencies["listActiveWorkspaces"];
+   archiveWorkspaceRecord?: ArchiveDependencies["archiveWorkspaceRecord"];
+   emitWorkspaceUpdatesForWorkspaceIds?: ArchiveDependencies["emitWorkspaceUpdatesForWorkspaceIds"];
+-  workspaceRegistry?: Pick<WorkspaceRegistry, "get" | "listActive" | "upsert">;
+-  projectRegistry?: Pick<ProjectRegistry, "get" | "list">;
++  workspaceRegistry?: Pick<WorkspaceRegistry, "get" | "listAll" | "listActive" | "upsert">;
++  projectRegistry?: Pick<ProjectRegistry, "archive" | "get" | "list">;
+   createDirectoryWorkspace?: (
+     cwd: string,
+     title?: string | null,
+@@ -642,6 +642,158 @@ function createToolCatalog(
    const childLogger = logger.child({ module: "agent", component: "paseo-tool-catalog" });
    const callerContext = callerAgentId ? (resolveCallerContext?.(callerAgentId) ?? null) : null;
  
@@ -21,7 +32,7 @@ index 8eedbb0..6b1a9c0 100644
 +  const orchestrationTools = new Set([
 +    "list_projects", "list_workspaces", "list_agents", "get_agent_status", "get_agent_activity",
 +    "list_providers", "list_models", "inspect_provider", "create_workspace", "create_agent",
-+    "send_agent_prompt", "archive_agent", "archive_workspace",
++    "send_agent_prompt", "archive_agent", "archive_workspace", "archive_project",
 +  ]);
 +  const workspaceRoot = "/var/lib/hermes/workspace";
 +  const agentPlacement = async (id: string) =>
@@ -30,14 +41,14 @@ index 8eedbb0..6b1a9c0 100644
 +    const live = new Map(agentManager.listAgents().map((agent) => [agent.id, agent]));
 +    const stored = await agentStorage.listByWorkspace(id);
 +    return [
-+      ...stored.filter((agent) => !agent.archivedAt && !live.has(agent.id)),
++      ...stored.filter((agent) => !agent.archivedAt && (!live.has(agent.id) || live.get(agent.id)?.lifecycle === "closed")),
 +      ...Array.from(live.values()).filter((agent) => agent.workspaceId === id && agent.lifecycle !== "closed"),
 +    ];
 +  };
 +  const activeAgents = async () => {
 +    const live = new Map(agentManager.listAgents().map((agent) => [agent.id, agent]));
 +    return [
-+      ...(await agentStorage.listActive()).filter((agent) => !live.has(agent.id)),
++      ...(await agentStorage.listActive()).filter((agent) => !live.has(agent.id) || live.get(agent.id)?.lifecycle === "closed"),
 +      ...Array.from(live.values()).filter((agent) => agent.lifecycle !== "closed"),
 +    ];
 +  };
@@ -150,7 +161,10 @@ index 8eedbb0..6b1a9c0 100644
 +        return rejectScope("Manage only your direct coordinators and project-local temporary agents.");
 +      }
 +    } else if (targetWorkspace.projectId !== own.projectId) {
-+      return rejectScope("Manage agents only within your project.");
++      const reportsToParent = name === "send_agent_prompt" && target.provider === "project-manager" &&
++        caller.labels["paseo.parent-agent-id"] === target.id && input.notifyOnFinish === false &&
++        input.background === true && input.activeTurnBehavior !== "interrupt";
++      if (!reportsToParent) return rejectScope("Manage agents only within your project. Final reports may be sent to your direct Project Manager with background=true and notifyOnFinish=false.");
 +    }
 +    if (name === "archive_agent" && (await activeAgents()).some(
 +      (agent) => agent.labels["paseo.parent-agent-id"] === target.id,
@@ -167,7 +181,7 @@ index 8eedbb0..6b1a9c0 100644
    const parseToolInput = async (tool: PaseoToolDefinition, input: unknown): Promise<unknown> => {
      const inputSchema = tool.inputSchema;
      if (!inputSchema) {
-@@ -749,6 +898,7 @@ function createToolCatalog(
+@@ -749,6 +901,7 @@ function createToolCatalog(
      if (!isPaseoToolEnabled(options.paseoToolPolicy, name)) {
        return;
      }
@@ -175,7 +189,7 @@ index 8eedbb0..6b1a9c0 100644
      const operation = hostTools.get(name as Parameters<typeof hostTools.get>[0]);
      if (operation) {
        localHostOperations.set(name, handler);
-@@ -811,7 +961,10 @@ function createToolCatalog(
+@@ -811,7 +964,10 @@ function createToolCatalog(
        description: config.description ?? name,
        inputSchema: config.inputSchema,
        outputSchema: config.outputSchema,
@@ -187,7 +201,7 @@ index 8eedbb0..6b1a9c0 100644
      });
    };
    const toCatalog = (): PaseoToolCatalog => ({
-@@ -3299,7 +3452,26 @@ function createToolCatalog(
+@@ -3299,7 +3455,60 @@ function createToolCatalog(
      },
    );
  
@@ -211,6 +225,40 @@ index 8eedbb0..6b1a9c0 100644
 +        return { content: [], structuredContent: ensureValidJson({ projects }) };
 +      },
 +    );
++    if (role === "project-manager") {
++      registerTool(
++        "archive_project",
++        {
++          title: "Archive a finished Paseo project",
++          description: "Archive an owned project after its direct coordinator and every workspace have been archived. Keeps the project directory and archived records.",
++          inputSchema: { projectId: z.string().trim().min(1) },
++        },
++        async ({ projectId }) => {
++          if (!callerAgentId || !options.projectRegistry || !options.workspaceRegistry) {
++            return rejectScope("Project archival is unavailable in this session.");
++          }
++          const project = await options.projectRegistry.get(projectId);
++          const workspaces = (await options.workspaceRegistry.listAll()).filter(
++            (workspace) => workspace.projectId === projectId,
++          );
++          if (!project || workspaces.length === 0 || workspaces.some((workspace) => !workspace.archivedAt)) {
++            return rejectScope("Archive the project's coordinator and all its workspaces first.");
++          }
++          const main = workspaces.filter((workspace) => workspace.kind !== "worktree" &&
++            workspace.cwd === project.rootPath);
++          const ownership = await Promise.all(
++            main.map((workspace) => agentStorage.listByWorkspace(workspace.workspaceId)),
++          );
++          if (!ownership.flat().some((agent) => agent.archivedAt && agent.provider === "coordinator" &&
++              agent.labels["paseo.parent-agent-id"] === callerAgentId)) {
++            return rejectScope("This project did not have a direct coordinator owned by you.");
++          }
++          const archivedAt = project.archivedAt ?? new Date().toISOString();
++          await options.projectRegistry.archive(projectId, archivedAt);
++          return { content: [], structuredContent: ensureValidJson({ projectId, archivedAt }) };
++        },
++      );
++    }
 +  } else registerPluginTools({
      agentManager,
      callerAgentId,
