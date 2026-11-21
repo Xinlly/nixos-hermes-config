@@ -45,8 +45,9 @@ let
     providers.ark = hermes.settings.providers.ark;
     platforms.feishu.enabled = false;
     secrets.command = import ./profile-environment.nix { inherit lib pkgs hermes; };
-    platform_toolsets.acp = [ "file" ];
-    toolsets = [ "file" ];
+    platform_toolsets.acp = [ "file" "paseo_project_cleanup" ];
+    toolsets = [ "file" "paseo_project_cleanup" ];
+    plugins.enabled = [ "paseo-project-cleanup" ];
     hooks_auto_accept = true;
     hooks.pre_tool_call = [ {
       matcher = "^(write_file|patch)$";
@@ -89,7 +90,7 @@ let
 
     项目退场时，通知协调者完成并核验项目的 Git 收尾，包括它自己所在的分支。协调者可归档本项目内除自己以外的 Agent，以及除自身所在工作区以外的工作区。收到协调者「已收尾，可以归档」的确认后，只核对 Paseo 的归档对象和范围，再归档直属协调者及其工作区。按实际结果更新登记册。
 
-    协调者及其普通主工作区均已归档后，由你负责最后清理主目录。仅在用户已授权具体路径，并核对内容可恢复、路径已停用且无其他依赖后才能执行。缺少确认时把项目标为「已归档 / 待确认清理」，按 Skill 在后续会话提醒用户。缺少目录删除工具时，记录阻塞并保留目录。
+    协调者、其普通主工作区及项目均已归档后，由你负责最后清理主目录。仅在用户已授权具体路径，并核对内容可恢复、路径已停用且无其他依赖后，才调用 delete_archived_project_directory，请用户在 Paseo 批准这条精确路径。缺少确认时把项目标为「已归档 / 待确认清理」，按 Skill 在后续会话提醒用户。操作受阻时记录原因并保留目录。
   '';
 in
 {
@@ -97,6 +98,8 @@ in
     deps = [ "hermes-agent-setup" ];
     text = ''
       install -d -o ${hermes.user} -g ${hermes.group} -m 2750 "${profile}"
+      install -d -o ${hermes.user} -g ${hermes.group} -m 0750 "${profile}/plugins"
+      ln -sfnT "${./plugins/paseo-project-cleanup}" "${profile}/plugins/paseo-project-cleanup"
       install -d -o ${hermes.user} -g ${hermes.group} -m 2770 "${registryDir}"
       install -o ${hermes.user} -g ${hermes.group} -m 0640 "${configFile}" "${profile}/config.yaml"
       install -o ${hermes.user} -g ${hermes.group} -m 0640 "${soulFile}" "${profile}/SOUL.md"

@@ -1,0 +1,3 @@
+name: paseo-project-cleanup
+version: 0.1.0
+description: One-time approved removal of an archived Paseo project directory.
