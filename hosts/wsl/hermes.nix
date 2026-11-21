@@ -14,6 +14,7 @@ in
     ../../modules/hermes/hermes-plugins.nix
     ../../modules/hermes/profile-manager.nix
     ../../modules/hermes/profile-paseo-project-manager.nix
+    ../../modules/hermes/profile-paseo-roles.nix
     ../../modules/hermes/vban-receiver.nix
     ../../modules/hermes/hindsight.nix
   ];
