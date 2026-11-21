@@ -1,2 +1,7 @@
 graphify-out/
 .playwright-mcp/
+.sensitive/
+References/
+
+*.ffs_db
+*.ffs_gui

@@ -27,15 +27,16 @@ in
       security = { redact_secrets = true; };
       privacy = { redact_pii = false; };
 
-      # 日志级别（DEBUG 用于排查流式卡片截断问题，用完改回 INFO）
+      # 日志级别
       logging = {
-        level = "DEBUG";
+        level = "INFO";
       };
 
       # 主模型
       model = {
         default = "ark-code-latest";
         provider = "ark";
+        context_length = 1000000;
       };
 
       # 主模型备援 — 主模型失败时自动切换
@@ -51,17 +52,17 @@ in
           model = "MiniMax-M3";
         };
         compression = {
-          provider = "deepseek";
-          model = "deepseek-v4-flash";
+          provider = "minimax-cn";
+          model = "MiniMax-M3";
         };
         # 轻量任务
-        title_generation = { provider = "deepseek"; model = "deepseek-v4-flash"; };
-        skills_hub        = { provider = "deepseek"; model = "deepseek-v4-flash"; };
-        approval          = { provider = "deepseek"; model = "deepseek-v4-flash"; };
-        mcp               = { provider = "deepseek"; model = "deepseek-v4-flash"; };
-        tts_audio_tags    = { provider = "deepseek"; model = "deepseek-v4-flash"; };
-        profile_describer = { provider = "deepseek"; model = "deepseek-v4-flash"; };
-        monitor           = { provider = "deepseek"; model = "deepseek-v4-flash"; };
+        title_generation = { provider = "minimax-cn"; model = "MiniMax-M3"; };
+        skills_hub        = { provider = "minimax-cn"; model = "MiniMax-M3"; };
+        approval          = { provider = "minimax-cn"; model = "MiniMax-M3"; };
+        mcp               = { provider = "minimax-cn"; model = "MiniMax-M3"; };
+        tts_audio_tags    = { provider = "minimax-cn"; model = "MiniMax-M3"; };
+        profile_describer = { provider = "minimax-cn"; model = "MiniMax-M3"; };
+        monitor           = { provider = "minimax-cn"; model = "MiniMax-M3"; };
       };
 
       # TTS — 自定义 MiMo 提供商（xiaomiTTS2OpenAITTSAPI 代理）
@@ -265,9 +266,6 @@ in
       };
     };
 
-    # ── Python 依赖组 ──
-    extraDependencyGroups = [ "feishu" "hindsight" "voice" "messaging" "anthropic" ];
-
     # ── 额外系统包 ──
     extraPackages = [
       cfg.portaudio
@@ -293,7 +291,8 @@ in
       MINIMAX_CN_BASE_URL = "https://api.minimaxi.com/anthropic";
       HTTP_PROXY = "http://127.0.0.1:35353";
       HTTPS_PROXY = "http://127.0.0.1:35353";
-      HERMES_SEARCH_PROXY = "http://127.0.0.1:35353";
+      NO_PROXY = "localhost,127.0.0.1,::1";
+      no_proxy = "localhost,127.0.0.1,::1";
       AGENT_BROWSER_PROXY = "http://127.0.0.1:35353";
       AGENT_BROWSER_PROXY_BYPASS = "localhost,127.0.0.1";
       DBUS_SESSION_BUS_ADDRESS = "unix:path=/tmp/dbus-session";  # soffice headless 绕过 /run/user/UID 权限
