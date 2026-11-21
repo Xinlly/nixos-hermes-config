@@ -11,9 +11,11 @@
   services.paseo = {
     enable = true;
     # Paseo follows this host's nixpkgs, so pin the npm cache hash for its fetcher.
-    package = inputs.paseo.packages.${pkgs.stdenv.hostPlatform.system}.paseo.override {
+    package = (inputs.paseo.packages.${pkgs.stdenv.hostPlatform.system}.paseo.override {
       npmDepsHash = "sha256-yLTaVMgu3tc/dgngJ7RP0htJcWE0ZtQ4mouypevyv0s=";
-    };
+    }).overrideAttrs (prev: {
+      patches = (prev.patches or [ ]) ++ [ ./paseo-project-orchestration.patch ];
+    });
 
     # 复用现有 hermes 系统账户（module 仅在 user=="paseo" 时才自建用户/组，
     # 故 group 也要显式给 hermes）
@@ -98,9 +100,9 @@
             "acp"
           ];
           env.HOME = "/var/lib/hermes";
-          # Keep this provider out of the unscoped MCP catalog until target checks exist.
-          options.supportsMcpServers = false;
-          paseoTools.enabled = false;
+          # The pinned daemon enforces project and agent boundaries for this catalog.
+          options.supportsMcpServers = true;
+          paseoTools.enabled = true;
         };
       };
     };

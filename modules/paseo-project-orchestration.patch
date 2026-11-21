@@ -1,0 +1,217 @@
+diff --git a/packages/server/src/server/agent/tools/paseo-tools.ts b/packages/server/src/server/agent/tools/paseo-tools.ts
+index 8eedbb0..6b1a9c0 100644
+--- a/packages/server/src/server/agent/tools/paseo-tools.ts
++++ b/packages/server/src/server/agent/tools/paseo-tools.ts
+@@ -9,7 +9,7 @@ import {
+   type ToolHosts,
+ } from "../host-operations/index.js";
+ import { AgentDirectory } from "../directory.js";
+-import { stat } from "node:fs/promises";
++import { realpath, stat } from "node:fs/promises";
+ import { z } from "zod";
+ import { ensureValidJson } from "../../json-utils.js";
+ import type { Logger } from "pino";
+@@ -642,6 +642,155 @@ function createToolCatalog(
+   const childLogger = logger.child({ module: "agent", component: "paseo-tool-catalog" });
+   const callerContext = callerAgentId ? (resolveCallerContext?.(callerAgentId) ?? null) : null;
+ 
++
++  const role = callerAgentId ? agentManager.getAgent(callerAgentId)?.provider : undefined;
++  const managedRole = role === "project-manager" || role === "coordinator";
++  const orchestrationTools = new Set([
++    "list_projects", "list_workspaces", "list_agents", "get_agent_status", "get_agent_activity",
++    "list_providers", "list_models", "inspect_provider", "create_workspace", "create_agent",
++    "send_agent_prompt", "archive_agent", "archive_workspace",
++  ]);
++  const workspaceRoot = "/var/lib/hermes/workspace";
++  const agentPlacement = async (id: string) =>
++    agentManager.getAgent(id) ?? (await agentStorage.get(id));
++  const workspaceAgents = async (id: string) => {
++    const live = new Map(agentManager.listAgents().map((agent) => [agent.id, agent]));
++    const stored = await agentStorage.listByWorkspace(id);
++    return [
++      ...stored.filter((agent) => !agent.archivedAt && !live.has(agent.id)),
++      ...Array.from(live.values()).filter((agent) => agent.workspaceId === id && agent.lifecycle !== "closed"),
++    ];
++  };
++  const activeAgents = async () => {
++    const live = new Map(agentManager.listAgents().map((agent) => [agent.id, agent]));
++    return [
++      ...(await agentStorage.listActive()).filter((agent) => !live.has(agent.id)),
++      ...Array.from(live.values()).filter((agent) => agent.lifecycle !== "closed"),
++    ];
++  };
++  const getWorkspace = async (id: string | undefined) =>
++    id ? (await options.workspaceRegistry?.get(id)) ?? null : null;
++  const rejectScope = (message: string): never => {
++    throw new PaseoToolInputError(message);
++  };
++  const canonicalWorkspacePath = async (path: unknown) => {
++    if (typeof path !== "string" || !path.startsWith(workspaceRoot + "/") ||
++        path === workspaceRoot + "/paseo-project-manager") {
++      return rejectScope("Use an existing directory inside the Hermes Workspace.");
++    }
++    if ((await realpath(path)) !== path) {
++      return rejectScope("Use the canonical Workspace path without symbolic links.");
++    }
++    return path;
++  };
++  const confirmScope = async (name: string, input: Record<string, unknown>) => {
++    if (!managedRole || !["create_workspace", "create_agent", "send_agent_prompt", "archive_agent",
++      "archive_workspace"].includes(name)) return;
++    if (input.serverId !== undefined && input.serverId !== options.serverId) {
++      return rejectScope("Project orchestration is scoped to this Paseo server.");
++    }
++    const caller = agentManager.getAgent(callerAgentId!);
++    const own = await getWorkspace(caller?.workspaceId);
++    if (!caller || !own || own.archivedAt) {
++      return rejectScope("Cannot resolve the caller's active workspace.");
++    }
++    const isDirect = (agent: { labels: Record<string, string> }) =>
++      agent.labels["paseo.parent-agent-id"] === caller.id;
++    if (name === "create_workspace") {
++      const path = await canonicalWorkspacePath(input.path ?? own.cwd);
++      if (role === "project-manager") {
++        if (input.isolation !== "local") return rejectScope("The Project Manager creates ordinary main workspaces.");
++        const existing = await options.workspaceRegistry?.listActive() ?? [];
++        if (existing.some((record) => record.cwd === path || record.projectId === input.projectId)) {
++          return rejectScope("Reuse the project's existing main workspace.");
++        }
++        if (input.projectId !== undefined) {
++          const project = await options.projectRegistry?.get(String(input.projectId));
++          if (!project || project.archivedAt || project.rootPath !== path) {
++            return rejectScope("The specified project does not own this root path.");
++          }
++        }
++      } else if (input.isolation !== "worktree" || input.projectId !== own.projectId || path !== own.cwd) {
++        return rejectScope("The coordinator creates managed worktrees from its own project's main workspace.");
++      }
++      return;
++    }
++    if (name === "create_agent") {
++      if (input.workspace !== undefined || input.relationship !== undefined) {
++        return rejectScope("Use explicit workspaceId and the default parent relationship.");
++      }
++      const target = await getWorkspace(typeof input.workspaceId === "string" ? input.workspaceId : undefined);
++      if (!target || target.archivedAt) return rejectScope("Specify an active workspaceId.");
++      const provider = String(input.provider).split("/")[0];
++      if (role === "coordinator") {
++        if (target.projectId !== own.projectId || !["planner", "worker", "reviewer"].includes(provider)) {
++          return rejectScope("Use a project-local planner, worker, or reviewer.");
++        }
++        if (provider === "worker" && !target.isPaseoOwnedWorktree) {
++          return rejectScope("Assign worker implementation to a managed worktree.");
++        }
++      } else if (target.workspaceId === own.workspaceId) {
++        if (provider !== "planner") return rejectScope("Use the planner provider for temporary intake research.");
++      } else {
++        if (provider !== "coordinator" || target.kind === "worktree" || target.projectId === own.projectId) {
++          return rejectScope("Create a coordinator in an ordinary business-project workspace.");
++        }
++        await canonicalWorkspacePath(target.cwd);
++        const sameProject = (await options.workspaceRegistry?.listActive() ?? [])
++          .filter((workspace) => workspace.projectId === target.projectId);
++        if (sameProject.length !== 1 || (await workspaceAgents(target.workspaceId)).length !== 0) {
++          return rejectScope("Coordinator creation requires a project with a single, empty main workspace.");
++        }
++      }
++      return;
++    }
++    if (name === "archive_workspace") {
++      const target = await getWorkspace(String(input.workspaceId));
++      if (!target || target.archivedAt || target.workspaceId === own.workspaceId) {
++        return rejectScope("The target is not an eligible active workspace.");
++      }
++      if ((await workspaceAgents(target.workspaceId)).length !== 0) {
++        return rejectScope("Archive the eligible agents before archiving the workspace.");
++      }
++      if (role === "coordinator") {
++        if (target.projectId !== own.projectId) return rejectScope("Archive only workspaces in your own project.");
++      } else {
++        const ownedCoordinator = (await agentStorage.listByWorkspace(target.workspaceId)).some(
++          (agent) => agent.archivedAt && agent.provider === "coordinator" && isDirect(agent),
++        );
++        if (target.kind === "worktree" || !ownedCoordinator) {
++          return rejectScope("Archive only the main workspace of an already archived direct coordinator.");
++        }
++      }
++      return;
++    }
++    const target = await agentPlacement(String(input.agentId));
++    const targetWorkspace = await getWorkspace(target?.workspaceId);
++    if (!target || !targetWorkspace || targetWorkspace.archivedAt || target.id === caller.id) {
++      return rejectScope("Could not resolve an eligible target agent and workspace.");
++    }
++    if (role === "project-manager") {
++      const coordinator = target.provider === "coordinator" && targetWorkspace.kind !== "worktree" &&
++        targetWorkspace.projectId !== own.projectId;
++      const temporary = target.provider === "planner" && targetWorkspace.workspaceId === own.workspaceId;
++      if (!isDirect(target) || !(coordinator || temporary)) {
++        return rejectScope("Manage only your direct coordinators and project-local temporary agents.");
++      }
++    } else if (targetWorkspace.projectId !== own.projectId) {
++      return rejectScope("Manage agents only within your project.");
++    }
++    if (name === "archive_agent" && (await activeAgents()).some(
++      (agent) => agent.labels["paseo.parent-agent-id"] === target.id,
++    )) {
++      return rejectScope("The target still has active children. Complete their project cleanup first.");
++    }
++    if (name === "send_agent_prompt" && role === "project-manager") {
++      if (agentManager.getAgent(target.id)?.lifecycle === "running") {
++        return rejectScope("The coordinator is running. Wait for it to finish before routing another task.");
++      }
++    }
++  };
++
+   const parseToolInput = async (tool: PaseoToolDefinition, input: unknown): Promise<unknown> => {
+     const inputSchema = tool.inputSchema;
+     if (!inputSchema) {
+@@ -749,6 +898,7 @@ function createToolCatalog(
+     if (!isPaseoToolEnabled(options.paseoToolPolicy, name)) {
+       return;
+     }
++    if (managedRole && !orchestrationTools.has(name)) return;
+     const operation = hostTools.get(name as Parameters<typeof hostTools.get>[0]);
+     if (operation) {
+       localHostOperations.set(name, handler);
+@@ -811,7 +961,10 @@ function createToolCatalog(
+       description: config.description ?? name,
+       inputSchema: config.inputSchema,
+       outputSchema: config.outputSchema,
+-      handler: handler as PaseoToolDefinition["handler"],
++      handler: async (input, context) => {
++        await confirmScope(name, input as Record<string, unknown>);
++        return handler(input, context);
++      },
+     });
+   };
+   const toCatalog = (): PaseoToolCatalog => ({
+@@ -3299,7 +3452,26 @@ function createToolCatalog(
+     },
+   );
+ 
+-  registerPluginTools({
++  if (managedRole) {
++    registerTool(
++      "list_projects",
++      {
++        title: "List Paseo projects",
++        description: "Find a project by name, root directory, or project ID, even without an active workspace.",
++        inputSchema: { query: z.string().trim().min(1).optional() },
++      },
++      async ({ query }) => {
++        if (!options.projectRegistry) throw new Error("Project registry is not configured");
++        const normalized = (value: string) => value.toLowerCase().replace(/[^\p{L}\p{N}]/gu, "");
++        const key = query ? normalized(query).replace(/project$/, "pro") : "";
++        const projects = (await options.projectRegistry.list()).filter((project) =>
++          !key || [project.projectId, project.displayName, project.customName ?? "", project.rootPath]
++            .some((value) => normalized(value).includes(key)),
++        );
++        return { content: [], structuredContent: ensureValidJson({ projects }) };
++      },
++    );
++  } else registerPluginTools({
+     agentManager,
+     callerAgentId,
+     scope,
