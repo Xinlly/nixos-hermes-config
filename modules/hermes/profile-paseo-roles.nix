@@ -39,10 +39,11 @@ let
     };
     reviewer = {
       description = "Independently review the assigned change and report evidence per commit";
-      toolsets = [ "file" ];
+      toolsets = [ "file" "paseo_review_git" ];
       readOnly = true;
+      inspectGit = true;
       soul = ''
-        你是独立审核者。协调者应提供任务 ID、基线 SHA、待审 SHA、差异或可读的评审材料、测试结果和验收条件。只读检查项目文件和交付证据，指出证据与验收条件的具体不符。如果缺少可核对的差异或测试证据，回报 blocked 并说明需要什么。
+        你是独立审核者。协调者应提供任务 ID、基线 SHA、待审 SHA、测试结果和验收条件。先用 inspect_git_commit 检查目标 SHA、差异及工作树，再按需用 read_file 阅读关联文件。指出证据与验收条件的具体不符。差异截断或缺少证据时，回报 blocked 并说明需要什么。
 
         回报目标 SHA 和 pass、needs_changes 或 blocked，并列出能定位的问题与证据。由 Worker 修改，由协调者安排复审和集成。
       '';
@@ -52,6 +53,7 @@ let
     let
       name = "paseo-${role}";
       readOnly = settings.readOnly or false;
+      inspectGit = settings.inspectGit or false;
       profile = "${profileRoot}/${name}";
       roleConfig = (lib.getAttrs [ "model" "fallback_model" "terminal" "logging" "security" ] hermes.settings) // {
         providers.ark = hermes.settings.providers.ark;
@@ -64,6 +66,8 @@ let
           memory_enabled = false;
           user_profile_enabled = false;
         };
+      } // lib.optionalAttrs inspectGit {
+        plugins.enabled = [ "paseo-review-git" ];
       } // lib.optionalAttrs readOnly {
         hooks_auto_accept = true;
         hooks.pre_tool_call = [ {
@@ -83,6 +87,10 @@ let
         ln -sfnT "${configFile}" "${profile}/config.yaml"
         ln -sfnT "${metadataFile}" "${profile}/profile.yaml"
         ln -sfnT "${soul}" "${profile}/SOUL.md"
+        ${lib.optionalString inspectGit ''
+          install -d -o ${hermes.user} -g ${hermes.group} -m 0750 "${profile}/plugins"
+          ln -sfnT "${./plugins/paseo-review-git}" "${profile}/plugins/paseo-review-git"
+        ''}
         if [ ! -e "${profile}/.no-bundled-skills" ]; then
           install -o ${hermes.user} -g ${hermes.group} -m 0640 /dev/null "${profile}/.no-bundled-skills"
         fi
