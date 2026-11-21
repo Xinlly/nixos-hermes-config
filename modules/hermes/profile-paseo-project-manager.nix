@@ -16,23 +16,28 @@ let
     from pathlib import Path
 
     event = json.load(sys.stdin)
-    registry = Path(${builtins.toJSON registryPath})
-    allowed = (
-        event.get("tool_name") == "write_file"
-        and (event.get("tool_input") or {}).get("path") == str(registry)
-        and registry.resolve() == registry
-    )
-    if allowed:
-        try:
-            entry = registry.lstat()
-        except FileNotFoundError:
-            pass
-        else:
-            allowed = stat.S_ISREG(entry.st_mode) and entry.st_nlink == 1
+    workspace = Path(${builtins.toJSON workspaceRoot})
+    arguments = event.get("tool_input") or {}
 
-    print(json.dumps({} if allowed else {
+    def can_write():
+        if event.get("tool_name") == "patch" and arguments.get("mode", "replace") != "replace":
+            return False
+        raw_path = arguments.get("path")
+        if not isinstance(raw_path, str) or not Path(raw_path).is_absolute():
+            return False
+        path = Path(raw_path)
+        # Do not hand a symlink or a traversal to a second path resolver.
+        if not path.is_relative_to(workspace) or path == workspace or path.resolve() != path:
+            return False
+        try:
+            entry = path.lstat()
+        except FileNotFoundError:
+            return True
+        return stat.S_ISREG(entry.st_mode) and entry.st_nlink == 1
+
+    print(json.dumps({} if can_write() else {
         "action": "block",
-        "message": "Project Manager may only use write_file on its AGENT.md registry.",
+        "message": "Use write_file or single-file patch with an absolute path under ${workspaceRoot} that does not cross a symlink or modify a hard-linked file.",
     }))
   '';
 
@@ -66,7 +71,7 @@ let
 
     你是用户在 Paseo 中的统一任务入口。项目登记册位于 `${registryPath}`。使用 Hermes 文件工具按绝对路径读取登记册，用 write_file 更新。如果确认文件尚不存在，在这个路径初始化表格。
 
-    你可以按绝对路径读取所需项目资料。Hermes 文件工具只允许 write_file 写入登记册。新建项目目录和首份 HANDOFF.md 由专用项目工具或获授权的操作者准备。缺少项目工具时，说明具体缺项。项目已有文件、工作区内的代码和 Git worktree 由协调者管理。
+    文件工具的读写范围是整个 Workspace，即 `${workspaceRoot}` 及其所有子目录；Workspace 外只可读取系统允许读取的资料。使用绝对路径写文件或逐文件修改。登记册只是你负责维护的文件之一。新建项目时可在 Workspace 下准备协调者的目录和首份 HANDOFF.md；项目代码及开发 worktree 日常由协调者管理。
 
     专用 Skill `paseo-project-manager` 位于 `${skillsDir}/paseo-project-manager/SKILL.md`。处理项目请求前，用 read_file 加载 Skill，并按当前用户意图选择对应流程。查询可以直接答复；转发、创建和退场各有进入条件。
 
@@ -82,7 +87,7 @@ let
 
     项目退场时，通知协调者完成并核验项目的 Git 收尾，包括它自己所在的分支。协调者可归档本项目内除自己以外的 Agent，以及除自身所在工作区以外的工作区。收到协调者「已收尾，可以归档」的确认后，只核对 Paseo 的归档对象和范围，再归档直属协调者及其工作区。按实际结果更新登记册。
 
-    协调者及其普通主工作区均已归档后，由你负责最后清理主目录。仅在用户已授权具体路径，并核对内容可恢复、路径已停用且无其他依赖后才能执行。缺少确认时把项目标为「已归档 / 待确认清理」，按 Skill 在后续会话提醒用户。当前没有专用目录删除工具时，安排有权限的操作者处理，并回查结果。
+    协调者及其普通主工作区均已归档后，由你负责最后清理主目录。仅在用户已授权具体路径，并核对内容可恢复、路径已停用且无其他依赖后才能执行。缺少确认时把项目标为「已归档 / 待确认清理」，按 Skill 在后续会话提醒用户。缺少目录删除工具时，记录阻塞并保留目录。
   '';
 in
 {
