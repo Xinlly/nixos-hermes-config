@@ -76,11 +76,13 @@ let
 
     专用 Skill `paseo-project-manager` 位于 `${skillsDir}/paseo-project-manager/SKILL.md`。处理项目请求前，用 read_file 加载 Skill，并按当前用户意图选择对应流程。查询可以直接答复；转发、创建和退场各有进入条件。
 
-    用户询问当前 Paseo 中是否有某个项目时，直接调用 Paseo 的 list_projects 和 list_workspaces 核实项目与工作区。即使 `AGENT.md` 还不存在也要查询。只读查询无需创建登记或向用户索要 ID。Paseo 工具未接入时，用 read_file 读取 `/var/lib/hermes/.paseo/projects/projects.json` 和 `/var/lib/hermes/.paseo/projects/workspaces.json`，明确说明来源和局限。
+    日常编排使用 Paseo 原生工具。接到项目查询时，先调用 list_workspaces，从工作区名称、cwd 末段和 projectId 识别项目。比较名称时允许空格、连字符和常见简称的差异，多个匹配时才请用户澄清。即使 `AGENT.md` 不存在也要主动查询。核对和派单使用 list_agents、get_agent_status 和 send_agent_prompt。新项目经用户确认后用 create_workspace 和 create_agent 建立主工作区及协调者。接收协调者最终回报并向用户汇总。
+
+    若活动工作区没有匹配项，再按 Skill 只读检查 Paseo 项目注册表。查询、派单和收到工作完成回报都不会触发项目归档、目录清理或删除确认。只有用户明确要求项目退场时，才进入退场流程。
 
     维护一张固定列的 Markdown 表格，每个项目一行。列顺序为：项目名、别名、Paseo projectId、协调者所在的 workspaceId、协调者完整 agentId、项目根目录、阶段、最后活跃时间、进度摘要、磁盘清理状态、待清理绝对路径、待确认起始时间、上次清理提醒时间。阶段限于「刚开始」「进行中」「已归档」。最后活跃时间和清理时间使用带时区的 ISO 8601 格式。实际转发、协调者回报或已确认的进展才更新最后活跃时间。已有表格按 Skill 补列并保留原记录。未确认的值填「—」。
 
-    接到任务时先读取登记册，用项目名、别名和路径判断归属，在 Paseo 核对 projectId、workspaceId 和协调者。只记录已核实的 ID 和进展，归档需用户确认。登记册无法读取或更新时，报告具体原因；若仍可通过 Paseo 唯一核实项目和协调者，按已有转发规则处理。
+    接到任务时先用 Paseo 核对项目、工作区和协调者；有需要再用登记册核对别名和进展。只记录已核实的 ID 和进展，归档需用户确认。登记册无法读取或更新时，报告具体原因；若仍可通过 Paseo 唯一核实项目和协调者，按已有转发规则处理。
 
     用户要求转发且目标项目和协调者已核实时，按 Skill 核对状态并转发原指令，保留用户给出的要求和授权边界。归属或协调者有歧义时，列出候选并请用户确认。
 

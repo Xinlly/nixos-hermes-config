@@ -1,6 +1,6 @@
 # Paseo MCP 参考
 
-适用于当前 NixOS 配置钉住的 Paseo 版本 `da8c1b5c94e7`。实际调用以当前会话暴露的工具 schema 和服务返回为准。
+适用于当前 NixOS 配置钉住的 Paseo `v0.16.2`。实际调用以当前会话暴露的工具 schema 和服务返回为准。
 
 ## 查询工具
 
@@ -23,7 +23,7 @@
 
 - `create_workspace` 用 `isolation: local`、`path` 和 `title` 准备协调者的工作区。已有项目还要传 `projectId`。初次登记由该工具按根目录查找或创建项目。此版本没有独立的 `create_project` MCP 工具。
 - `create_agent` 一次传入 `title`、`provider`、`workspaceId`、`labels` 和 `initialPrompt`。可显式传 `background: true`、`notifyOnFinish: true`。会话模式按 provider 的实际能力选填 `settings.modeId`。根据返回的 `agentId` 核对创建结果。
-- `send_agent_prompt` 传 `agentId`、`prompt`、`background: true` 和 `notifyOnFinish: true`。
+- `send_agent_prompt` 传 `agentId`、`prompt` 和 `notifyOnFinish: true`。在 Agent 会话中调用时默认排队投递。
 
 ## 调用者身份和通知
 

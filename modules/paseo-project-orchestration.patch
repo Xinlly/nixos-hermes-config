@@ -1,5 +1,5 @@
 diff --git a/packages/server/src/server/agent/tools/paseo-tools.ts b/packages/server/src/server/agent/tools/paseo-tools.ts
-index 8eedbb0..0e89b5e 100644
+index 8eedbb0..82cd231 100644
 --- a/packages/server/src/server/agent/tools/paseo-tools.ts
 +++ b/packages/server/src/server/agent/tools/paseo-tools.ts
 @@ -9,7 +9,7 @@ import {
@@ -22,7 +22,7 @@ index 8eedbb0..0e89b5e 100644
    createDirectoryWorkspace?: (
      cwd: string,
      title?: string | null,
-@@ -642,6 +642,156 @@ function createToolCatalog(
+@@ -642,6 +642,166 @@ function createToolCatalog(
    const childLogger = logger.child({ module: "agent", component: "paseo-tool-catalog" });
    const callerContext = callerAgentId ? (resolveCallerContext?.(callerAgentId) ?? null) : null;
  
@@ -30,11 +30,14 @@ index 8eedbb0..0e89b5e 100644
 +  const role = callerAgentId ? agentManager.getAgent(callerAgentId)?.provider : undefined;
 +  const managedRole = role === "project-manager" || role === "coordinator";
 +  const orchestrationTools = new Set([
-+    "list_projects", "list_workspaces", "list_agents", "get_agent_status", "get_agent_activity",
++    "list_workspaces", "list_agents", "get_agent_status", "get_agent_activity",
 +    "list_providers", "list_models", "inspect_provider", "create_workspace", "create_agent",
 +    "send_agent_prompt", "archive_agent", "archive_workspace", "archive_project",
 +  ]);
 +  const workspaceRoot = "/var/lib/hermes/workspace";
++  const isCoordinator = (agent: { provider: string; labels: Record<string, string> }) =>
++    agent.provider === "coordinator" || (agent.provider === "hermes" &&
++      ["orchestrator", "coordinator"].includes(agent.labels.role ?? agent.labels["paseo.role"] ?? ""));
 +  const agentPlacement = async (id: string) =>
 +    agentManager.getAgent(id) ?? (await agentStorage.get(id));
 +  const activeAgents = async () => {
@@ -118,11 +121,18 @@ index 8eedbb0..0e89b5e 100644
 +          return rejectScope("Create a coordinator in an ordinary business-project workspace.");
 +        }
 +        await canonicalWorkspacePath(target.cwd);
-+        const sameProject = (await options.workspaceRegistry?.listActive() ?? [])
-+          .filter((workspace) => workspace.projectId === target.projectId);
-+        if (sameProject.length !== 1 || (await workspaceAgents(target.workspaceId)).length !== 0) {
-+          return rejectScope("Coordinator creation requires a project with a single, empty main workspace.");
++        const project = await options.projectRegistry?.get(target.projectId);
++        if (!project || project.archivedAt || project.rootPath !== target.cwd) {
++          return rejectScope("Use the project's existing primary workspace.");
 +        }
++        const projectWorkspaceIds = new Set((await options.workspaceRegistry?.listActive() ?? [])
++          .filter((workspace) => workspace.projectId === target.projectId)
++          .map((workspace) => workspace.workspaceId));
++        const existingCoordinator = (await activeAgents()).some((agent) =>
++          agent.workspaceId && projectWorkspaceIds.has(agent.workspaceId) &&
++          isCoordinator(agent),
++        );
++        if (existingCoordinator) return rejectScope("The project already has an active coordinator.");
 +      }
 +      return;
 +    }
@@ -138,7 +148,7 @@ index 8eedbb0..0e89b5e 100644
 +        if (target.projectId !== own.projectId) return rejectScope("Archive only workspaces in your own project.");
 +      } else {
 +        const ownedCoordinator = (await agentStorage.listByWorkspace(target.workspaceId)).some(
-+          (agent) => agent.archivedAt && agent.provider === "coordinator" && isDirect(agent),
++          (agent) => agent.archivedAt && isCoordinator(agent) && isDirect(agent),
 +        );
 +        if (target.kind === "worktree" || !ownedCoordinator) {
 +          return rejectScope("Archive only the main workspace of an already archived direct coordinator.");
@@ -152,7 +162,7 @@ index 8eedbb0..0e89b5e 100644
 +      return rejectScope("Could not resolve an eligible target agent and workspace.");
 +    }
 +    if (role === "project-manager") {
-+      const coordinator = target.provider === "coordinator" && targetWorkspace.kind !== "worktree" &&
++      const coordinator = isCoordinator(target) && targetWorkspace.kind !== "worktree" &&
 +        targetWorkspace.projectId !== own.projectId;
 +      const temporary = target.provider === "planner" && targetWorkspace.workspaceId === own.workspaceId;
 +      if (!isDirect(target) || !(coordinator || temporary)) {
@@ -179,7 +189,7 @@ index 8eedbb0..0e89b5e 100644
    const parseToolInput = async (tool: PaseoToolDefinition, input: unknown): Promise<unknown> => {
      const inputSchema = tool.inputSchema;
      if (!inputSchema) {
-@@ -749,6 +899,7 @@ function createToolCatalog(
+@@ -749,6 +909,7 @@ function createToolCatalog(
      if (!isPaseoToolEnabled(options.paseoToolPolicy, name)) {
        return;
      }
@@ -187,7 +197,7 @@ index 8eedbb0..0e89b5e 100644
      const operation = hostTools.get(name as Parameters<typeof hostTools.get>[0]);
      if (operation) {
        localHostOperations.set(name, handler);
-@@ -811,7 +962,10 @@ function createToolCatalog(
+@@ -811,7 +972,10 @@ function createToolCatalog(
        description: config.description ?? name,
        inputSchema: config.inputSchema,
        outputSchema: config.outputSchema,
@@ -199,30 +209,12 @@ index 8eedbb0..0e89b5e 100644
      });
    };
    const toCatalog = (): PaseoToolCatalog => ({
-@@ -3299,7 +3453,60 @@ function createToolCatalog(
+@@ -3299,7 +3463,42 @@ function createToolCatalog(
      },
    );
  
 -  registerPluginTools({
 +  if (managedRole) {
-+    registerTool(
-+      "list_projects",
-+      {
-+        title: "List Paseo projects",
-+        description: "Find a project by name, root directory, or project ID, even without an active workspace.",
-+        inputSchema: { query: z.string().trim().min(1).optional() },
-+      },
-+      async ({ query }) => {
-+        if (!options.projectRegistry) throw new Error("Project registry is not configured");
-+        const normalized = (value: string) => value.toLowerCase().replace(/[^\p{L}\p{N}]/gu, "");
-+        const key = query ? normalized(query).replace(/project$/, "pro") : "";
-+        const projects = (await options.projectRegistry.list()).filter((project) =>
-+          !key || [project.projectId, project.displayName, project.customName ?? "", project.rootPath]
-+            .some((value) => normalized(value).includes(key)),
-+        );
-+        return { content: [], structuredContent: ensureValidJson({ projects }) };
-+      },
-+    );
 +    if (role === "project-manager") {
 +      registerTool(
 +        "archive_project",
@@ -247,7 +239,7 @@ index 8eedbb0..0e89b5e 100644
 +          const ownership = await Promise.all(
 +            main.map((workspace) => agentStorage.listByWorkspace(workspace.workspaceId)),
 +          );
-+          if (!ownership.flat().some((agent) => agent.archivedAt && agent.provider === "coordinator" &&
++          if (!ownership.flat().some((agent) => agent.archivedAt && isCoordinator(agent) &&
 +              agent.labels["paseo.parent-agent-id"] === callerAgentId)) {
 +            return rejectScope("This project did not have a direct coordinator owned by you.");
 +          }
