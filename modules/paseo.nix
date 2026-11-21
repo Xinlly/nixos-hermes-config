@@ -95,7 +95,7 @@
             "acp"
           ];
           env.HOME = "/var/lib/hermes";
-          # The profile connects to Paseo using the current caller ID.
+          # Keep this provider out of the unscoped MCP catalog until target checks exist.
           params.supportsMcpServers = false;
         };
       };

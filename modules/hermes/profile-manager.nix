@@ -1,9 +1,8 @@
 # modules/hermes/profile-manager.nix — 管理者专用 Hermes profile 落位（阶段 0）
 #
 # 在 ${stateDir}/.hermes/profiles/manager/ 下落位一个 default 的声明式克隆：
-#   - config.yaml 由 services.hermes-agent.settings 深拷贝渲染，唯一差异是
-#     plugins.disabled 追加 "hermes-lark-streaming"（ACP 不加载飞书流式卡片插件）。
-#   - skills / plugins / .env / .env.secrets 只读软链对齐 default（同机同用户）。
+#   - config.yaml 继承默认设置，但不连接飞书，也不加载飞书流式卡片插件。
+#   - skills / plugins 复用 default，模型和工具按变量名获取凭证。
 #   - 数据目录全新空目录，不克隆历史；SOUL.md 仅首次拷贝，之后不覆盖。
 #
 # 不新增任何 systemd service（该 profile 只跑 `hermes --profile manager acp`，
@@ -15,10 +14,31 @@ let
   root = "${ha.stateDir}/.hermes";
   profileDir = "${root}/profiles/manager";
 
-  # 克隆声明源 settings；唯一覆盖：plugins.disabled 在基准值上追加
-  # hermes-lark-streaming。基准取运行期合并后的实际值（不硬编码 curator），
-  # unique 去重保证该名最终恰好出现一次（改动 hermes-plugins.nix 后基准已含它）。
+  # Keep the legacy manager's tool and memory configuration while default owns Feishu.
   managerSettings = lib.recursiveUpdate ha.settings {
+    platforms.feishu.enabled = false;
+    secrets.command = import ./profile-environment.nix {
+      inherit lib pkgs;
+      hermes = ha;
+      extraKeys = [
+        "AGENT_BROWSER_AUTO_CONNECT"
+        "AGENT_BROWSER_EXECUTABLE_PATH"
+        "AGENT_BROWSER_PROXY"
+        "AGENT_BROWSER_PROXY_BYPASS"
+        "BRAVE_SEARCH_API_KEY"
+        "DBUS_SESSION_BUS_ADDRESS"
+        "DEEPSEEK_API_KEY"
+        "GITHUB_TOKEN"
+        "HERMES_CUA_DRIVER_CMD"
+        "PLAYWRIGHT_BROWSERS_PATH"
+        "POLOAPI_API_KEY"
+        "PULSE_SERVER"
+        "SIYUAN_TOKEN"
+        "XFYUN_API_KEY"
+        "XIAOMI_API_KEY"
+        "XIAOMI_MODEL"
+      ];
+    };
     plugins.disabled = lib.unique ((ha.settings.plugins.disabled or [ ]) ++ [
       "hermes-lark-streaming"
     ]);
@@ -61,10 +81,12 @@ in
         install -o ${ha.user} -g ${ha.group} -m 0640 ${managerHindsight} ${profileDir}/hindsight/config.json
       fi
 
-      # ── (c) .env / .env.secrets：软链对齐仓外既有文件（同机同用户）。──
-      # 仅落符号链接，密钥内容绝不进 nix store / git。
-      ln -sfn ${root}/.env ${profileDir}/.env
-      ln -sfn ${root}/.env.secrets ${profileDir}/.env.secrets
+      # Retire only the symlinks installed by the previous generation.
+      for file in .env .env.secrets; do
+        if [ "$(readlink ${profileDir}/$file || true)" = "${root}/$file" ]; then
+          unlink ${profileDir}/$file
+        fi
+      done
 
       # ── (e) SOUL.md：仅首次拷贝实体文件；已存在绝不覆盖（保留未来个性化）──
       if [ ! -f ${profileDir}/SOUL.md ]; then

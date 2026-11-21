@@ -10,24 +10,13 @@ let
   skillsDir = "${./skills}";
 
   settings = lib.getAttrs [ "model" "fallback_model" "terminal" "logging" "security" ] hermes.settings // {
-    platform_toolsets.acp = [ "paseo" "file" ];
-    toolsets = [ "paseo" ];
+    providers.ark = hermes.settings.providers.ark;
+    platforms.feishu.enabled = false;
+    secrets.command = import ./profile-environment.nix { inherit lib pkgs hermes; };
+    # Add project tools once the MCP executor can enforce per-target permissions.
+    platform_toolsets.acp = [ ];
+    toolsets = [ ];
     skills.external_dirs = [ skillsDir ];
-    mcp_servers.paseo = {
-      url = hermes.settings.mcp_servers.paseo.url;
-      tools.include = [
-        "list_workspaces"
-        "list_agents"
-        "get_agent_status"
-        "send_agent_prompt"
-        "create_workspace"
-        "create_agent"
-        "archive_agent"
-        "archive_workspace"
-        "list_providers"
-        "list_models"
-      ];
-    };
 
     memory = {
       provider = "none";
@@ -65,8 +54,6 @@ let
   '';
 in
 {
-  services.paseo.settings.agents.providers."project-manager".env.HERMES_WRITE_SAFE_ROOT = workspaceRoot;
-
   system.activationScripts.hermes-paseo-project-manager = {
     deps = [ "hermes-agent-setup" ];
     text = ''
@@ -81,8 +68,9 @@ in
         install -o ${hermes.user} -g ${hermes.group} -m 0640 /dev/null "${profile}/.no-bundled-skills"
       fi
       for file in .env .env.secrets; do
-        ln -sfnT "${home}/$file" "${profile}/$file"
-        chown -h ${hermes.user}:${hermes.group} "${profile}/$file"
+        if [ "$(readlink "${profile}/$file" || true)" = "${home}/$file" ]; then
+          unlink "${profile}/$file"
+        fi
       done
     '';
   };
