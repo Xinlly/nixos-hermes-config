@@ -68,7 +68,7 @@
         };
 
         # 管理者专用并列 provider：同一 hermes wrapper，但经 --profile manager
-        # 使用独立 manager profile（modules/hermes/manager-profile.nix）。
+        # 使用独立 manager profile（modules/hermes/profile-manager.nix）。
         # 该 profile 的 config 已禁用 hermes-lark-streaming（飞书流式卡片不加载）。
         providers."hermes-manager" = {
           extends = "acp";
@@ -82,6 +82,21 @@
           ];
           # 与 hermes provider 一致：显式钉死真实 HOME，其余环境照常继承
           env.HOME = "/var/lib/hermes";
+        };
+
+        providers."project-manager" = {
+          extends = "acp";
+          label = "project-manager";
+          description = "Paseo task intake and forwarding";
+          command = [
+            "/run/current-system/sw/bin/hermes"
+            "--profile"
+            "paseo-project-manager"
+            "acp"
+          ];
+          env.HOME = "/var/lib/hermes";
+          # The profile connects to Paseo using the current caller ID.
+          params.supportsMcpServers = false;
         };
       };
     };

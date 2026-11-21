@@ -83,7 +83,7 @@ in
       # 也不再加载；飞书流式卡片停用是已知接受后果，由管理者窗口另排，不属本改动。
       # 恢复方式：把 "hermes-lark-streaming" 从 disabled 移除并加回 enabled。
       # 注意：extraPlugins 包安装与 nix-managed-* 软链全部保留——禁加载≠不安装，
-      # 保留便于未来恢复；manager profile（modules/hermes/manager-profile.nix）
+      # 保留便于未来恢复；manager profile（modules/hermes/profile-manager.nix）
       # 亦只读共享同一插件包并在其 config 中禁用。
       disabled = [
         "hermes-knowledge-curator"

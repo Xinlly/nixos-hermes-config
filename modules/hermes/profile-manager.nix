@@ -1,4 +1,4 @@
-# modules/hermes/manager-profile.nix — 管理者专用 Hermes profile 落位（阶段 0）
+# modules/hermes/profile-manager.nix — 管理者专用 Hermes profile 落位（阶段 0）
 #
 # 在 ${stateDir}/.hermes/profiles/manager/ 下落位一个 default 的声明式克隆：
 #   - config.yaml 由 services.hermes-agent.settings 深拷贝渲染，唯一差异是
@@ -43,7 +43,7 @@ in
       set -e
 
       # ── profile 根（父目录 profiles/ 已存在 2775；install -d 不改既有父目录权限）──
-      install -d -o ${ha.user} -g ${ha.group} -m 2770 ${profileDir}
+      install -d -o ${ha.user} -g ${ha.group} -m 2750 ${profileDir}
 
       # ── (d) 全新空数据/运行态目录，不克隆历史 ──
       # 对齐 hermes_cli/profiles.py _PROFILE_DIRS（memories/sessions/plans/
