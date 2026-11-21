@@ -45,8 +45,8 @@ let
     providers.ark = hermes.settings.providers.ark;
     platforms.feishu.enabled = false;
     secrets.command = import ./profile-environment.nix { inherit lib pkgs hermes; };
-    platform_toolsets.acp = [ "file" "paseo_project_cleanup" ];
-    toolsets = [ "file" "paseo_project_cleanup" ];
+    platform_toolsets.acp = [ "file" ];
+    toolsets = [ "file" ];
     plugins.enabled = [ "paseo-project-cleanup" ];
     hooks_auto_accept = true;
     hooks.pre_tool_call = [ {

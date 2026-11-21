@@ -124,7 +124,7 @@ def delete_archived_project_directory(args, session_id=None):
 def register(ctx):
     ctx.register_tool(
         name=TOOL,
-        toolset="paseo_project_cleanup",
+        toolset="file",
         schema={
             "name": TOOL,
             "description": "Permanently remove only your already archived project's exact registered "
